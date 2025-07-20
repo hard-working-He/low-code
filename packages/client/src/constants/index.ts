@@ -262,4 +262,12 @@ for (let i = 0, len = list.length; i < len; i++) {
     list[i] = { ...commonAttr, ...item }
 }
 
+//index对应组件
+//0:LText
+//1:LButton
+export const componentMap = {
+    0: 'text',
+    1: 'button',
+    2: 'picture',
+  }
 export default list

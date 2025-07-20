@@ -2,20 +2,23 @@ import React from 'react';
 import { useEditorStore } from '@/stores/useEditorStore';
 import type { Component } from '@/stores/useEditorStore';
 import LText from '@/components/LText';
+import LButton from '@/components/LButton';
+import LPicture from '@/components/LPicture';
 import './index.scss';
+import { throttle } from '@/utils/throttle'; 
 
 // 组件映射表
 const componentMap: Record<string, React.ComponentType<any>> = {
   'text': LText,
-  // 可以添加更多组件映射
-  // 'LButton': LButton,
-  // 'LPicture': LPicture,
+  'button': LButton,
+  'picture': LPicture,
 };
 
 const Editor: React.FC = () => {
   // 从 store 中获取组件数据
   const componentData = useEditorStore((state) => state.componentData);
   const updateComponentDataPropValue = useEditorStore((state) => state.updateComponentDataPropValue);
+  const updateComponentPosition = useEditorStore((state) => state.updateComponentPosition);
   // 渲染每个组件
   const renderComponent = (component: Component) => {
     const DynamicComponent = componentMap[component.type];
@@ -29,10 +32,12 @@ const Editor: React.FC = () => {
     return (
       <div
         key={component.id}
+        draggable={true}
         style={{
           position: 'absolute',
           ...component.style
         }}
+        onMouseDown={(e) => handleMouseDown(e, component)}
       >
         <DynamicComponent
           propValue={component.propValue}
@@ -47,34 +52,35 @@ const Editor: React.FC = () => {
     console.log(element, value);
     updateComponentDataPropValue(element, value);
   };
-
-  const handleAddComponent = () => {
-    addComponent({
-      id: '3',
-      type: 'text',
-      propValue: '333',
-      style: {
-        top: 200,
-        left: 200,
-        width: 100,
-        height: 100,
-        zIndex: 3,
-      },
-    });
-    addComponent({
-      id: '4',
-        type: 'text',
-        propValue: '444',
-        style: {
-          top: 300,
-          left: 300,
-          width: 100,
-          height: 100,
-          zIndex: 4,
-        },
-    });
-  };
   
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>, component: Component) => {
+    e.stopPropagation()
+
+    const pos = { ...component.style }
+    const startY = e.clientY
+    const startX = e.clientX
+    // 如果直接修改属性，值的类型会变为字符串，所以要转为数值型
+    const startTop = Number(pos.top)
+    const startLeft = Number(pos.left)
+
+    const move = throttle((moveEvent: React.MouseEvent<HTMLDivElement>) => {
+        const currX = moveEvent.clientX
+        const currY = moveEvent.clientY
+        pos.top = currY - startY + startTop
+        pos.left = currX - startX + startLeft
+        // 修改当前组件样式
+        updateComponentPosition(component.id, pos.left, pos.top)
+    }, 16); // ~60fps
+
+    const up = () => {
+        document.removeEventListener('mousemove', move as any)
+        document.removeEventListener('mouseup', up)
+    }
+
+    document.addEventListener('mousemove', move as any)
+    document.addEventListener('mouseup', up)
+}
+
   return (
     <div className="editor-container">
       {/* 画布区域 */}

@@ -24,6 +24,7 @@ interface EditorStore {
   componentData: Component[];
   addComponent: (component: Component) => void;
   updateComponentDataPropValue: (element: Component, value: string) => void;
+  updateComponentPosition: (id: string, left: number, top: number) => void;
   clearComponentData: () => void;
   deleteComponent: (id: string) => void;
 }
@@ -43,7 +44,7 @@ export const useEditorStore = create<EditorStore>((set) => ({
     },
     {
         id: '2',
-        type: 'text',
+        type: 'button',
         propValue: 'Hello, world!',
         style: {
             top: 100,
@@ -51,6 +52,24 @@ export const useEditorStore = create<EditorStore>((set) => ({
             width: 100,
             height: 100,
             zIndex: 2,
+        },
+    },
+    {
+        id: '3',
+        type: 'picture',
+        propValue: {
+            url: 'https://picsum.photos/200/300',
+            flip: {
+                vertical: false,
+                horizontal: false,
+            },
+        },
+        style: {
+            top: 200,
+            left: 200,
+            width: 200,
+            height: 300,
+            zIndex: 3,
         },
     }
 ],
@@ -60,6 +79,15 @@ export const useEditorStore = create<EditorStore>((set) => ({
         componentData: state.componentData.map((item) => {
           if (item.id === element.id) {
             return { ...item, propValue: value };
+          }
+          return item;
+        })
+      })),
+      //更新组件位置
+      updateComponentPosition: (id: string, left: number, top: number) => set((state: EditorStore) => ({
+        componentData: state.componentData.map((item) => {
+          if (item.id === id) {
+            return { ...item, style: { ...item.style, left, top } };
           }
           return item;
         })

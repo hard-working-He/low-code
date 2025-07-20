@@ -18,6 +18,7 @@ const LText: React.FC<LTextProps> = ({ propValue, element, onInput, editMode = '
 
   return (
     <>
+    <div className='l-text-container'>
       {editMode === 'edit' ? (
         <textarea
           value={propValue}
@@ -32,6 +33,8 @@ const LText: React.FC<LTextProps> = ({ propValue, element, onInput, editMode = '
           ))}
         </div>
       )}
+    </div>
+      
     </>
   );
 };
