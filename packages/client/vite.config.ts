@@ -17,7 +17,7 @@ export default defineConfig({
       '@assets': resolve(__dirname, './src/assets'),
       '@constants': resolve(__dirname, './src/constants'),
       '@styles': resolve(__dirname, './src/styles'),
-      '@constants': resolve(__dirname, './src/constants')
+      '@stores': resolve(__dirname, './src/stores')
     }
   }
 })

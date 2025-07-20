@@ -12,7 +12,7 @@ interface CanvasStyleData {
 
 interface CanvasAttrProps {
   canvasStyleData: CanvasStyleData;
-  updateCanvasStyleData: (key: string, value: string | number) => void;
+  updateCanvasStyleData: (key: keyof CanvasStyleData, value: string | number) => void;
 }
 
 const CanvasAttr: React.FC<CanvasAttrProps> = ({ canvasStyleData, updateCanvasStyleData }) => {
@@ -36,13 +36,13 @@ const CanvasAttr: React.FC<CanvasAttrProps> = ({ canvasStyleData, updateCanvasSt
             {isIncludesColor(key) ? (
               <ColorPicker
                 value={canvasStyleData[key as keyof CanvasStyleData] as string}
-                onChange={(color, hex) => updateCanvasStyleData(key, hex)}
+                onChange={(color, hex) => updateCanvasStyleData(key as keyof CanvasStyleData, hex)}
               />
             ) : (
               <Input
                 type="number"
                 value={canvasStyleData[key as keyof CanvasStyleData]}
-                onChange={(e) => updateCanvasStyleData(key, Number(e.target.value))}
+                onChange={(e) => updateCanvasStyleData(key as keyof CanvasStyleData, Number(e.target.value))}
               />
             )}
           </Form.Item>

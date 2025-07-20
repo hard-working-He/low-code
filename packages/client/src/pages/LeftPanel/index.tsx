@@ -1,7 +1,22 @@
 import React, { useEffect } from 'react';
 import componentList from '@constants/index';
 import { useDrag } from '@/hooks';
+// 只导入需要的图标
+import { LineChartOutlined, PieChartOutlined, BarChartOutlined } from '@ant-design/icons';
+import type { ForwardRefExoticComponent } from 'react';
 import './index.scss';
+
+// 创建类型安全的图标映射
+interface IconMap {
+  [key: string]: ForwardRefExoticComponent<any>;
+}
+
+const ICON_MAP: IconMap = {
+  'LineChartOutlined': LineChartOutlined,
+  'PieChartOutlined': PieChartOutlined,
+  'BarChartOutlined': BarChartOutlined,
+  // 可以根据需要添加更多图标
+};
 
 const LeftPanel: React.FC = () => {
     useEffect(() => {
@@ -10,6 +25,12 @@ const LeftPanel: React.FC = () => {
 
     const handleClick = (e: React.MouseEvent<HTMLDivElement>, index: number) => {
         console.log('clicked ', index);
+    };
+
+    // 按需渲染 Antd 图标组件
+    const renderAntdIcon = (iconName: string) => {
+        const IconComponent = ICON_MAP[iconName];
+        return IconComponent ? <IconComponent /> : null;
     };
 
     return (
@@ -35,11 +56,16 @@ const LeftPanel: React.FC = () => {
                         data-index={index}
                         onClick={(e) => handleClick(e, index)}
                     >
-                        {item.icon.substr(0, 2) === 'el' ? (
-                            <span className={item.icon}></span>
-                        ) : (
-                            <span className={`iconfont icon-${item.icon}`}></span>
+                        {item.icon && (
+                            item.icon.includes('antd:') ? 
+                                renderAntdIcon(item.icon.split(':')[1]) :
+                                item.icon.substr(0, 2) === 'el' ? (
+                                    <span className={item.icon}></span>
+                                ) : (
+                                    <span className={`iconfont icon-${item.icon}`}></span>
+                                )
                         )}
+                        
                     </div>
                 );
             })}

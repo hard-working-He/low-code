@@ -26,7 +26,13 @@ html, body, #root {
     width: 10px;
   }
 }
-
+.content {
+  min-height: 300px;
+  border: 2px dashed #ccc;
+  padding: 20px;
+  position: relative;
+  background-color: rgba(200, 200, 200, 0.3);
+}
 .draw-panel {
   flex: 1;
   background: var(--secondary-bg-color);

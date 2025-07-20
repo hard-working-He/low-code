@@ -213,7 +213,7 @@ const list = [
     {
         component: 'VChart',
         label: '图表',
-        icon: 'el-icon-data-analysis',
+        icon: 'antd:LineChartOutlined',
         propValue: {
             chart: 'VChart',
             option: {
