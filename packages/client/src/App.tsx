@@ -4,6 +4,7 @@ import Toolbar from '@pages/toolbar'
 import CanvasAttr from '@components/CanvasAttr'
 import LeftPanel from '@/pages/LeftPanel'
 import DrawPanel from '@/pages/DrawPanel'
+import { useDrop } from '@/hooks'
 
 interface CanvasStyleData {
   color: string;
@@ -38,44 +39,28 @@ function App() {
     setLeftListOpen(!leftListOpen);
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-    console.log("从画布区域开始拖拽");
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    console.log("Drop事件触发");
-    const draggedIndex = e.dataTransfer.getData('index');
-    console.log('Dropped item index:', draggedIndex);
-    
-    // 显示所有可用的dataTransfer数据类型
-    console.log("所有可用的数据类型:", e.dataTransfer.types);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {  
-    e.preventDefault(); // 这行很重要，允许放置
-    console.log('Dragging over drop target');
-    
-    // 添加视觉反馈
-    e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.3)';
-  };
-  
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    console.log('离开放置区域');
-    
-    // 恢复原始背景
-    e.currentTarget.style.backgroundColor = '';
-  };
-  
-  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    console.log('进入放置区域');
-  };
-
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     console.log('Mouse down');
   };
+  
+  // 使用自定义的useDrop hook处理拖放逻辑
+  const { dropProps, isOver } = useDrop({
+    onDrop: (data, e) => {
+      console.log('组件已放置，索引为:', data);
+      // 这里可以添加放置后的处理逻辑，例如添加新组件到画布
+    },
+    onDragEnter: (e) => {
+      console.log('进入放置区域');
+    },
+    onDragLeave: (e) => {
+      console.log('离开放置区域');
+    },
+    onDragOver: (e) => {
+      console.log('拖拽经过放置区域');
+    },
+    // 指定接受的数据类型
+    acceptTypes: ['custom-drag', 'index', 'text/plain']
+  });
 
   return (
     <>
@@ -96,17 +81,14 @@ function App() {
         <section className='draw-panel'>
           <div 
             className="content" 
-            onDrop={handleDrop} 
-            onDragOver={handleDragOver}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragStart={handleDragStart}
+            {...dropProps}
             onMouseDown={handleMouseDown}
             style={{
               minHeight: '300px',
               border: '2px dashed #ccc',
               padding: '20px',
-              position: 'relative'
+              position: 'relative',
+              backgroundColor: isOver ? 'rgba(200, 200, 200, 0.3)' : undefined
             }}
           >
             <DrawPanel />
