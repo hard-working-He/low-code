@@ -1,16 +1,14 @@
 import React, { useEffect } from 'react';
-import { useEditorStore } from '@/stores/useEditorStore';
-import { useLayerStore } from '@/stores/useLayerStore';
-import { useSnapShotStore } from '@/stores';
+import { useEditorStore,useLayerStore,useSnapShotStore ,useAppStore} from '@/stores';
 import { setDefaultComponentData } from '@/stores/useSnapShotStore';
 import type { Component } from '@/stores/useEditorStore';
 import LText from '@/components/LText';
 import LButton from '@/components/LButton';
 import LPicture from '@/components/LPicture';
 import Shape from './Shape';
-import './index.scss';
-import { throttle } from '@/utils/throttle'; 
 import MarkLine from './MarkLine';
+import { throttle } from '@/utils/throttle'; 
+import './index.scss';
 
 // 组件映射表
 const componentMap: Record<string, React.ComponentType<any>> = {
@@ -23,23 +21,14 @@ const Editor: React.FC = () => {
   // 从 store 中获取组件数据
   const componentData = useEditorStore((state) => state.componentData);
   const updateComponentDataPropValue = useEditorStore((state) => state.updateComponentDataPropValue);
-  const updateComponentPosition = useEditorStore((state) => state.updateComponentPosition);
-  
+  const canvasStyleData = useAppStore((state) => state.canvasStyleData);
   // 从 LayerStore 中获取当前选中组件
   const curComponent = useLayerStore((state) => state.curComponent);
-  const curComponentIndex = useLayerStore((state) => state.curComponentIndex);
-  const upComponent=useLayerStore((state)=>state.upComponent);
-  const downComponent=useLayerStore((state)=>state.downComponent);
   const topComponent=useLayerStore((state)=>state.topComponent);
-  const bottomComponent=useLayerStore((state)=>state.bottomComponent);
   const setCurComponent=useLayerStore((state)=>state.setCurComponent);
-  const setComponentData=useLayerStore((state)=>state.setComponentData);
-  const getComponentData=useLayerStore((state)=>state.getComponentData);
 
   // 从 SnapshotStore 中获取快照相关函数
   const recordSnapshot = useSnapShotStore((state) => state.recordSnapshot);
-  const snapshotData=useSnapShotStore((state) => state.snapshotData);
-  const snapshotIndex=useSnapShotStore((state) => state.snapshotIndex);
   
   // 节流记录快照函数
   const throttledRecordSnapshot = throttle(recordSnapshot, 16);
@@ -118,7 +107,13 @@ const Editor: React.FC = () => {
       <div className="editor">
         <div 
           className="draw-panel" 
-          style={{ position: 'relative' }}
+          style={{ 
+            position: 'relative',
+            backgroundColor: canvasStyleData.backgroundColor, 
+            opacity: canvasStyleData.opacity,
+            color: canvasStyleData.color,
+            fontSize: canvasStyleData.fontSize
+          }}
         >
           <div 
             className="content"
