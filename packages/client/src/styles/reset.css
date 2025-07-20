@@ -53,3 +53,11 @@ li {
     border-radius: 4px;
     background-color: #ddd;
 }
+
+button:focus {
+    outline: none;
+  }
+  
+  button {
+    border: none;
+  }

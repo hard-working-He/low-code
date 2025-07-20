@@ -12,16 +12,44 @@ html, body, #root {
 
 .app-container {
   display: flex;
+  height: 100%;
 }
 
 .left-panel {
   width: 200px;
+  transition: width 0.2s ease-in-out;
+  overflow: hidden;
+  &.active {
+    width: 200px;
+  }
+  &.inactive {
+    width: 10px;
+  }
 }
 
 .draw-panel {
   flex: 1;
+  background: var(--secondary-bg-color);
+  height: 100%;
+  overflow: auto;
+  padding: 20px;
+  transition: all .3s;
 }
 
 .right-panel {
   width: 200px;
+}
+.show-list {
+  /* 垂直居中 */
+  height: 20px;
+  width: 20px;
+  background-color: #4285f4;
+  color: white;
+  border: 1px;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
 }

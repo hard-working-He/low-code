@@ -4,6 +4,9 @@ import './index.css'
 import App from './App.tsx'
 import '@styles/variable.scss'
 import '@styles/reset.css'
+import '@styles/global.scss'
+import '@styles/dark.scss'
+import '@styles/animate.scss'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
