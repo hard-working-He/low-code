@@ -49,6 +49,13 @@ interface LPictureProps {
  * @returns {JSX.Element} - 渲染的组件
  */
 const LPicture = ({ propValue, element }: LPictureProps) => {
+  let { url, flip } = propValue || { url: '', flip: { vertical: false, horizontal: false } };
+  if (!url) {
+    url = 'https://encrypted-tbn0.gstatic.com/licensed-image?q=tbn:ANd9GcSOT0Cg6NGLJoqXVQEIbjujUgr71_pkbs15gZXjB67hFeDfgHrBSE8rz4EZjj3HaXYzIFULyBgszkpDXg2OypDFx8bBLKD8cYZe5yBVDQ';
+  }
+  if (!flip) {
+    flip = { vertical: false, horizontal: false };
+  }
   // 画布 DOM 元素的引用
   const canvasRef = useRef<HTMLCanvasElement>(null)
   // 存储图片元素以在绘制操作中重用的引用
@@ -180,7 +187,7 @@ const LPicture = ({ propValue, element }: LPictureProps) => {
 
   // 渲染一个带有隐藏溢出的 div，包含画布
   return (
-    <div style={{ overflow: 'hidden',position:'absolute' }}>
+    <div style={{ overflow: 'hidden'}}>
       <canvas ref={canvasRef}></canvas>
     </div>
   );

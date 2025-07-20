@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useEditorStore } from '@/stores/useEditorStore';
 import type { Component } from '@/stores/useEditorStore';
 import LText from '@/components/LText';
@@ -19,6 +19,8 @@ const Editor: React.FC = () => {
   const componentData = useEditorStore((state) => state.componentData);
   const updateComponentDataPropValue = useEditorStore((state) => state.updateComponentDataPropValue);
   const updateComponentPosition = useEditorStore((state) => state.updateComponentPosition);
+  const [isDragging, setIsDragging] = useState(false);
+  
   // 渲染每个组件
   const renderComponent = (component: Component) => {
     const DynamicComponent = componentMap[component.type];
@@ -32,9 +34,10 @@ const Editor: React.FC = () => {
     return (
       <div
         key={component.id}
-        draggable={true}
+        draggable={false}
         style={{
           position: 'absolute',
+          cursor: isDragging ? 'grabbing' : 'grab',
           ...component.style
         }}
         onMouseDown={(e) => handleMouseDown(e, component)}
@@ -53,33 +56,42 @@ const Editor: React.FC = () => {
     updateComponentDataPropValue(element, value);
   };
   
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>, component: Component) => {
-    e.stopPropagation()
-
-    const pos = { ...component.style }
-    const startY = e.clientY
-    const startX = e.clientX
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>, component: Component) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    setIsDragging(true);
+    
+    const startY = e.clientY;
+    const startX = e.clientX;
     // 如果直接修改属性，值的类型会变为字符串，所以要转为数值型
-    const startTop = Number(pos.top)
-    const startLeft = Number(pos.left)
+    const startTop = Number(component.style.top || 0);
+    const startLeft = Number(component.style.left || 0);
 
-    const move = throttle((moveEvent: React.MouseEvent<HTMLDivElement>) => {
-        const currX = moveEvent.clientX
-        const currY = moveEvent.clientY
-        pos.top = currY - startY + startTop
-        pos.left = currX - startX + startLeft
+    const throttledMove = throttle((moveEvent: MouseEvent) => {
+        const currX = moveEvent.clientX;
+        const currY = moveEvent.clientY;
+        const newTop = currY - startY + startTop;
+        const newLeft = currX - startX + startLeft;
+        
         // 修改当前组件样式
-        updateComponentPosition(component.id, pos.left, pos.top)
-    }, 16); // ~60fps
+        updateComponentPosition(component.id, newLeft, newTop);
+    }, 16);
 
-    const up = () => {
-        document.removeEventListener('mousemove', move as any)
-        document.removeEventListener('mouseup', up)
-    }
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+        moveEvent.preventDefault();
+        throttledMove(moveEvent);
+    };
 
-    document.addEventListener('mousemove', move as any)
-    document.addEventListener('mouseup', up)
-}
+    const handleMouseUp = () => {
+        setIsDragging(false);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [updateComponentPosition]);
 
   return (
     <div className="editor-container">
