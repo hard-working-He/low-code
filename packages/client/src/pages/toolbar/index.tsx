@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Button, Switch, Input, Modal, Upload } from 'antd';
 import { UndoOutlined, RedoOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import './index.scss';
-
+import { useEditorStore } from '@/stores/useEditorStore';
 // Placeholder components - implement these as needed
 const Preview = (props: { isScreenshot: boolean; onClose: () => void }) => <div>Preview Component</div>;
 const AceEditor = (props: { onCloseEditor: () => void }) => <div>Ace Editor Component</div>;
 
 const Toolbar: React.FC = () => {
+  const clearComponentData = useEditorStore((state) => state.clearComponentData);
   // State variables
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isShowPreview, setIsShowPreview] = useState(false);
@@ -63,7 +64,7 @@ const Toolbar: React.FC = () => {
   };
 
   const clearCanvas = () => {
-    // TODO: Implement clear canvas functionality
+    clearComponentData();
   };
 
   const compose = () => {

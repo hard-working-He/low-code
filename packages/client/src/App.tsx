@@ -4,7 +4,7 @@ import '@assets/iconfont/iconfont.css'
 import Toolbar from '@pages/toolbar'
 import CanvasAttr from '@components/CanvasAttr'
 import LeftPanel from '@/pages/LeftPanel'
-import DrawPanel from '@/pages/DrawPanel'
+import Editor from '@/pages/Editor'
 import { useDrop } from '@/hooks'
 import { useAppStore } from './stores/useAppStore'
 
@@ -50,20 +50,19 @@ function App() {
         <section className={`left-panel ${leftListOpen ? 'active' : 'inactive'}`}>
           <LeftPanel />
         </section>
-        <button
-          title="show-list-btn"
+        <div
           className="btn show-list left-btn"
           onClick={toggleLeftPanel}
         >
           {leftListOpen ? '←' : '→'}
-        </button>
+        </div>
 
         <section className='draw-panel'>
           <div
             className="content"
             {...dropProps}
           >
-            <DrawPanel />
+            <Editor />
           </div>
         </section>
         <section className='right-panel'>
