@@ -12,9 +12,8 @@ import Editor from '@/pages/Editor'
 // 导入自定义hooks和状态管理
 import { useDrop } from '@/hooks'
 import { useAppStore, useEditorStore } from '@/stores'
-
-import calculateRelativePosition  from '@/utils/computeXY'
 import { componentMap } from '@/constants'
+import calculateRelativePosition  from '@/utils/computeXY'
 
 function App() {
   // 从应用状态管理器中获取画布样式数据和更新方法
@@ -31,13 +30,24 @@ function App() {
   // 从编辑器状态管理器获取组件数据和添加组件的方法
   const componentData = useEditorStore((state) => state.componentData);
   const addComponent = useEditorStore((state) => state.addComponent);
-  const updateComponentPosition = useEditorStore((state) => state.updateComponentPosition);
+  
   // 添加效果钩子确保页面加载后输出调试信息
   useEffect(() => {
     console.log("App组件已加载，拖放功能已初始化");
+    
+    // Log any click on the document to help debug event propagation
+    const handleDocumentClick = (e: MouseEvent) => {
+      console.log('Document clicked:', e.target);
+    };
+    
+    document.addEventListener('click', handleDocumentClick);
+    
+    return () => {
+      document.removeEventListener('click', handleDocumentClick);
+    };
   }, []);
 
-  console.log(componentData);
+  console.log('Current components:', componentData);
 
   // 使用自定义的useDrop hook处理拖放逻辑
   const { dropProps, isOver } = useDrop({
@@ -54,15 +64,30 @@ function App() {
       
       if (relativePosition) {
         // 添加新组件到画布 - 使用计算出的相对坐标定位组件
+        
+        // 为data=3的情况设置特殊的propValue
+        let propValue;
+        if (data === 2) {
+          propValue = {
+            url: 'https://encrypted-tbn0.gstatic.com/licensed-image?q=tbn:ANd9GcSOT0Cg6NGLJoqXVQEIbjujUgr71_pkbs15gZXjB67hFeDfgHrBSE8rz4EZjj3HaXYzIFULyBgszkpDXg2OypDFx8bBLKD8cYZe5yBVDQ',
+            flip: {
+              vertical: false,
+              horizontal: false
+            }
+          };
+        } else {
+          propValue = 'Hello, world!1666';
+        }
+        
         addComponent({
           id: (componentData.length + 1).toString(),
           type: componentMap[data as keyof typeof componentMap],
-          propValue: 'Hello, world!1666',
+          propValue: propValue,
           style: {
             top: relativePosition.y,
             left: relativePosition.x,
-            width: 100,
-            height: 100,
+            width: 100,  // Add default width没有宽高无法放大缩小
+            height: 100, // Add default height
             zIndex: componentData.length + 1,
           },
         });
@@ -80,16 +105,7 @@ function App() {
     },
     onDragOver: (e) => {
       // 仅在控制台记录拖拽经过事件
-      console.log('拖拽经过放置区域');
-      
-      // 可以在这里获取相对坐标用于实时预览或其他功能
-      // const canvasElement = document.querySelector('.draw-panel .content');
-      // const relativePosition = calculateRelativePosition(e.clientX, e.clientY, canvasElement);
-      // if (relativePosition) {
-      //   console.log('相对坐标:', relativePosition.x, relativePosition.y);
-      // } else {
-      //   console.log('窗口坐标:', e.clientX, e.clientY);
-      // }
+      // console.log('拖拽经过放置区域');
     },
     // 指定接受的数据类型 - 确保拖放操作只接受指定的数据类型
     acceptTypes: ['custom-drag', 'index', 'text/plain']
@@ -117,6 +133,12 @@ function App() {
           <div
             className="content"
             {...dropProps}
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+              background: isOver ? 'rgba(0, 0, 255, 0.1)' : 'transparent',
+            }}
           >
             <Editor />
           </div>

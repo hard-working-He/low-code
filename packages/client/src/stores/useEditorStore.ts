@@ -9,12 +9,15 @@ export interface Component {
   id: string;
   type: string;
   propValue: string|object;
+  component?: string;
+  isLock?: boolean;
   style: {
     top: number;
     left: number;
-    width: number;
-    height: number;
+    width?: number;//可选
+    height?: number;//可选
     zIndex: number;
+    rotate?: number;
     [key: string]: any;
   };
 }
@@ -24,7 +27,7 @@ interface EditorStore {
   componentData: Component[];
   addComponent: (component: Component) => void;
   updateComponentDataPropValue: (element: Component, value: string) => void;
-  updateComponentPosition: (id: string, left: number, top: number) => void;
+  updateComponentPosition: (id: string, left: number, top: number, additionalStyles?: any) => void;
   clearComponentData: () => void;
   deleteComponent: (id: string) => void;
 }
@@ -83,15 +86,26 @@ export const useEditorStore = create<EditorStore>((set) => ({
           return item;
         })
       })),
-      //更新组件位置
-      updateComponentPosition: (id: string, left: number, top: number) => set((state: EditorStore) => ({
-        componentData: state.componentData.map((item) => {
-          if (item.id === id) {
-            return { ...item, style: { ...item.style, left, top } };
-          }
-          return item;
-        })
-      })),
+      //更新组件位置和样式
+      updateComponentPosition: (id: string, left: number, top: number, additionalStyles?: any) => set((state: EditorStore) => {
+        console.log('Updating component position:', id, { left, top, ...additionalStyles });
+        return {
+          componentData: state.componentData.map((item) => {
+            if (item.id === id) {
+              return { 
+                ...item, 
+                style: { 
+                  ...item.style, 
+                  left, 
+                  top,
+                  ...(additionalStyles || {})
+                } 
+              };
+            }
+            return item;
+          })
+        };
+      }),
       //清空画布
       clearComponentData: () => set((state: EditorStore) => ({ componentData: [] })),
       //删除组件
