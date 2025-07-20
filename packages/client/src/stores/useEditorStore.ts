@@ -7,6 +7,7 @@ import { create } from 'zustand'
 // 组件类型定义
 export interface Component {
   id: string;
+  index: number;
   type: string;
   propValue: string|object;
   component?: string;
@@ -16,7 +17,6 @@ export interface Component {
     left: number;
     width?: number;//可选
     height?: number;//可选
-    zIndex: number;
     rotate?: number;
     [key: string]: any;
   };
@@ -30,11 +30,13 @@ interface EditorStore {
   updateComponentPosition: (id: string, left: number, top: number, additionalStyles?: any) => void;
   clearComponentData: () => void;
   deleteComponent: (id: string) => void;
+  setComponentData: (data: Component[]) => void;
 }
 
 export const useEditorStore = create<EditorStore>((set) => ({
     componentData: [{
         id: '1',
+        index: 1,
         type: 'text',
         propValue: 'Hello, world!',
         style: {
@@ -42,11 +44,11 @@ export const useEditorStore = create<EditorStore>((set) => ({
             left: 0,
             width: 100,
             height: 100,
-            zIndex: 1,
         },
     },
     {
         id: '2',
+        index: 2,
         type: 'button',
         propValue: 'Hello, world!',
         style: {
@@ -54,25 +56,6 @@ export const useEditorStore = create<EditorStore>((set) => ({
             left: 100,
             width: 100,
             height: 100,
-            zIndex: 2,
-        },
-    },
-    {
-        id: '3',
-        type: 'picture',
-        propValue: {
-            url: 'https://picsum.photos/200/300',
-            flip: {
-                vertical: false,
-                horizontal: false,
-            },
-        },
-        style: {
-            top: 200,
-            left: 200,
-            width: 200,
-            height: 300,
-            zIndex: 3,
         },
     }
 ],
@@ -110,4 +93,6 @@ export const useEditorStore = create<EditorStore>((set) => ({
       clearComponentData: () => set((state: EditorStore) => ({ componentData: [] })),
       //删除组件
       deleteComponent: (id: string) => set((state: EditorStore) => ({ componentData: state.componentData.filter((item) => item.id !== id) })),
+      //设置组件数据
+      setComponentData: (data: Component[]) => set(() => ({ componentData: data })),
 }))

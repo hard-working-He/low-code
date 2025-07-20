@@ -33,14 +33,14 @@ export function useDrag(options: UseDragOptions) {
       onDragStart(e);
     }
     
-    console.log('Drag started with data:', data);
+    //console.log('Drag started with data:', data);
   }, [data, type, onDragStart]);
   
   const handleDragEnd = useCallback((e: React.DragEvent<HTMLElement>) => {
     if (onDragEnd) {
       onDragEnd(e);
     }
-    console.log('Drag ended');
+    //console.log('Drag ended');
   }, [onDragEnd]);
   
   // 返回拖拽属性和处理函数

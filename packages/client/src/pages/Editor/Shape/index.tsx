@@ -16,9 +16,19 @@ interface ShapeProps {
   defaultStyle: any;
   index: number | string;
   children?: React.ReactNode;
+  onClick?: (e: React.MouseEvent) => void; // Add onClick prop
+  onPositionChange?: () => void; // Add position change callback
 }
 
-const Shape: React.FC<ShapeProps> = ({ active, element, defaultStyle, index, children }) => {
+const Shape: React.FC<ShapeProps> = ({ 
+  active, 
+  element, 
+  defaultStyle, 
+  index, 
+  children, 
+  onClick,
+  onPositionChange 
+}) => {
   const [cursors, setCursors] = useState<Record<string, string>>({});
   const shapeRef = useRef<HTMLDivElement>(null);
   
@@ -99,6 +109,10 @@ const Shape: React.FC<ShapeProps> = ({ active, element, defaultStyle, index, chi
     e.preventDefault();
     console.log('Component selected:', element.id);
     setCurComponent(element, Number(index));
+    // Call the onClick prop if it exists
+    if (onClick) {
+      onClick(e);
+    }
   };
 
   // Handle mouse down on shape (for dragging)
@@ -144,6 +158,11 @@ const Shape: React.FC<ShapeProps> = ({ active, element, defaultStyle, index, chi
       console.log('Mouse up, drag ended');
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      
+      // Call position change callback if provided and element has moved
+      if (hasMove && onPositionChange) {
+        onPositionChange();
+      }
     };
     
     document.addEventListener('mousemove', handleMouseMove);
@@ -202,6 +221,11 @@ const Shape: React.FC<ShapeProps> = ({ active, element, defaultStyle, index, chi
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       setCursors(getCursor());
+      
+      // Call position change callback if provided and element has moved
+      if (hasMove && onPositionChange) {
+        onPositionChange();
+      }
     };
     
     document.addEventListener('mousemove', handleMouseMove);

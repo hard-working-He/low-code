@@ -11,7 +11,7 @@ import Editor from '@/pages/Editor'
 
 // 导入自定义hooks和状态管理
 import { useDrop } from '@/hooks'
-import { useAppStore, useEditorStore } from '@/stores'
+import { useAppStore, useEditorStore, useSnapShotStore } from '@/stores'
 import { componentMap } from '@/constants'
 import calculateRelativePosition  from '@/utils/computeXY'
 
@@ -31,9 +31,12 @@ function App() {
   const componentData = useEditorStore((state) => state.componentData);
   const addComponent = useEditorStore((state) => state.addComponent);
   
+  // 从快照存储获取记录快照的方法
+  const recordSnapshot = useSnapShotStore((state) => state.recordSnapshot);
+  
   // 添加效果钩子确保页面加载后输出调试信息
   useEffect(() => {
-    console.log("App组件已加载，拖放功能已初始化");
+    //console.log("App组件已加载，拖放功能已初始化");
     
     // Log any click on the document to help debug event propagation
     const handleDocumentClick = (e: MouseEvent) => {
@@ -47,7 +50,7 @@ function App() {
     };
   }, []);
 
-  console.log('Current components:', componentData);
+  //console.log('Current components:', componentData);
 
   // 使用自定义的useDrop hook处理拖放逻辑
   const { dropProps, isOver } = useDrop({
@@ -81,6 +84,7 @@ function App() {
         
         addComponent({
           id: (componentData.length + 1).toString(),
+          index: componentData.length + 1,
           type: componentMap[data as keyof typeof componentMap],
           propValue: propValue,
           style: {
@@ -88,19 +92,37 @@ function App() {
             left: relativePosition.x,
             width: 100,  // Add default width没有宽高无法放大缩小
             height: 100, // Add default height
-            zIndex: componentData.length + 1,
           },
         });
+        
+        // 组件添加后，立即记录一个新的快照
+        // 使用setTimeout确保在状态更新后记录快照
+        setTimeout(() => {
+          console.log('拖拽结束，组件索引:', data, '记录新快照');
+          try {
+            // 确保有组件数据后再记录快照
+            const components = useEditorStore.getState().componentData;
+            if (components && components.length > 0) {
+              recordSnapshot();
+              console.log('添加组件后的componentData:', components,
+                '添加组件后快照数据:', useSnapShotStore.getState().snapshotData,'索引',useSnapShotStore.getState().snapshotIndex);
+            } else {
+              console.warn('组件数据为空，跳过快照记录');
+            }
+          } catch (error) {
+            console.error('记录快照失败:', error);
+          }
+        }, 0);
       }
     },
     onDragEnter: (e) => {
       // 进入拖放区域时更新状态
-      console.log('进入放置区域');
+      //console.log('进入放置区域');
       setIsOver(true);
     },
     onDragLeave: (e) => {
       // 离开拖放区域时更新状态
-      console.log('离开放置区域');
+      //console.log('离开放置区域');
       setIsOver(false);
     },
     onDragOver: (e) => {

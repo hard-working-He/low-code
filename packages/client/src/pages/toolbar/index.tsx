@@ -1,14 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Switch, Input, Modal, Upload } from 'antd';
 import { UndoOutlined, RedoOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import './index.scss';
-import { useEditorStore } from '@/stores/useEditorStore';
+import { useEditorStore, useSnapShotStore } from '@/stores';
+import type { Component } from '@/stores/useEditorStore';
+
 // Placeholder components - implement these as needed
 const Preview = (props: { isScreenshot: boolean; onClose: () => void }) => <div>Preview Component</div>;
 const AceEditor = (props: { onCloseEditor: () => void }) => <div>Ace Editor Component</div>;
 
 const Toolbar: React.FC = () => {
+  // Editor store functions
+  const componentData = useEditorStore((state) => state.componentData);
   const clearComponentData = useEditorStore((state) => state.clearComponentData);
+
+  // Snapshot store functions
+  const undo = useSnapShotStore((state) => state.undo);
+  const redo = useSnapShotStore((state) => state.redo);
+  const recordSnapshot = useSnapShotStore((state) => state.recordSnapshot);
+  const snapshotIndex = useSnapShotStore((state) => state.snapshotIndex);
+  const snapshotData = useSnapShotStore((state) => state.snapshotData);
+  
   // State variables
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isShowPreview, setIsShowPreview] = useState(false);
@@ -19,10 +31,16 @@ const Toolbar: React.FC = () => {
   const [jsonData, setJsonData] = useState('');
   const [canvasStyleData, setCanvasStyleData] = useState({ width: 1200, height: 740 });
   const [scale, setScale] = useState(100);
+  const [curComponent, setCurComponent] = useState<Component | null>(null);
+  
+  // Watch for component data changes and log them
+  useEffect(() => {
+    console.log('Component data updated:', componentData);
+    console.log('所以useSnapShotStore.getState().snapshotData', useSnapShotStore.getState().snapshotData);
+  }, [componentData]);
   
   // Placeholder for component data
-  const areaData = { components: [] };
-  const curComponent = null;
+  const areaData = { components: componentData };
 
   // Event handlers
   const onAceEditorChange = () => {
@@ -42,14 +60,6 @@ const Toolbar: React.FC = () => {
     // TODO: Implement export functionality
   };
 
-  const undo = () => {
-    // TODO: Implement undo functionality
-  };
-
-  const redo = () => {
-    // TODO: Implement redo functionality
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // TODO: Implement file change handler
   };
@@ -61,26 +71,32 @@ const Toolbar: React.FC = () => {
 
   const save = () => {
     // TODO: Implement save functionality
+    recordSnapshot(); // Record snapshot after saving
   };
 
   const clearCanvas = () => {
     clearComponentData();
+    recordSnapshot(); // Record snapshot after clearing canvas
   };
 
   const compose = () => {
     // TODO: Implement compose functionality
+    recordSnapshot(); // Record snapshot after composition
   };
 
   const decompose = () => {
     // TODO: Implement decompose functionality
+    recordSnapshot(); // Record snapshot after decomposition
   };
 
   const lock = () => {
     // TODO: Implement lock functionality
+    recordSnapshot(); // Record snapshot after locking
   };
 
   const unlock = () => {
     // TODO: Implement unlock functionality
+    recordSnapshot(); // Record snapshot after unlocking
   };
 
   const handlePreviewChange = () => {
@@ -93,7 +109,8 @@ const Toolbar: React.FC = () => {
 
   const handleScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setScale(Number(e.target.value));
-    // TODO: Implement scale change functionality
+    // 保留界面显示，但不再触发实际的缩放功能
+    console.log('画布比例已更改为:', e.target.value + '%', '(缩放功能已禁用)');
   };
 
   const handleToggleDarkMode = (checked: boolean) => {
@@ -109,16 +126,63 @@ const Toolbar: React.FC = () => {
   const processJSON = () => {
     // TODO: Implement JSON processing
     setIsShowDialog(false);
+    recordSnapshot(); // Record snapshot after importing/exporting JSON
   };
 
+  const handleUndo = () => {
+    console.log('undo');  
+    console.log('Before undo: snapshotIndex=', snapshotIndex, ', snapshotData=', snapshotData);
+    
+    try {
+      undo();
+      
+      setTimeout(() => {
+        console.log('After undo: snapshotIndex=', useSnapShotStore.getState().snapshotIndex);
+      }, 10);
+    } catch (error) {
+      console.error('撤销操作失败:', error);
+    }
+  };
+
+  const handleRedo = () => {
+    console.log('redo');
+    console.log('Before redo: snapshotIndex=', snapshotIndex, ', snapshotData=', snapshotData);
+    
+    try {
+      redo();
+      
+      setTimeout(() => {
+        console.log('After redo: snapshotIndex=', useSnapShotStore.getState().snapshotIndex);
+      }, 10);
+    } catch (error) {
+      console.error('重做操作失败:', error);
+    }
+  };
+
+  // 计算撤销和重做按钮是否应该禁用
+  const canUndo = snapshotIndex > 0;
+  const canRedo = snapshotIndex < snapshotData.length - 1;
+  
   return (
     <div className='toolbar-container'>
       <div className={isDarkMode ? 'dark toolbar' : 'toolbar'}>
         <Button onClick={onAceEditorChange}>JSON</Button>
         <Button onClick={onImportJSON}>导入</Button>
         <Button onClick={onExportJSON}>导出</Button>
-        <Button onClick={undo} icon={<UndoOutlined />}>撤消</Button>
-        <Button onClick={redo} icon={<RedoOutlined />}>重做</Button>
+        <Button 
+          onClick={handleUndo} 
+          icon={<UndoOutlined />}
+          disabled={!canUndo}
+        >
+          撤消
+        </Button>
+        <Button 
+          onClick={handleRedo} 
+          icon={<RedoOutlined />}
+          disabled={!canRedo}
+        >
+          重做
+        </Button>
         
         <label htmlFor="input" className="insert">
           插入图片

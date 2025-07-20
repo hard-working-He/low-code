@@ -12,7 +12,7 @@ const LText: React.FC<LTextProps> = ({ propValue, element, onInput, editMode = '
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    console.log(e.target.value);
+    //console.log(e.target.value);
     onInput(element, e.target.value);
   };
 
