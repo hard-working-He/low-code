@@ -3,6 +3,7 @@ import { useLayerStore } from '@/stores/useLayerStore';
 import { useEditorStore } from '@/stores/useEditorStore';
 import type { Component } from '@/stores/useEditorStore';
 import { calculateComponentPositionAndSize } from '@/utils/computeXY';
+import eventBus from '@/utils/eventBus';
 import './index.scss';
 
 // Rotation and resizing utilities
@@ -10,16 +11,18 @@ const mod360 = (deg: number) => {
   return (deg + 360) % 360;
 };
 
+// 组件属性定义
 interface ShapeProps {
   active: boolean;
   element: Component;
   defaultStyle: any;
   index: number | string;
-  children?: React.ReactNode;
-  onClick?: (e: React.MouseEvent) => void; // Add onClick prop
-  onPositionChange?: () => void; // Add position change callback
+  children: React.ReactNode;
+  onClick?: (e: React.MouseEvent) => void;
+  onPositionChange?: () => void;
 }
 
+// Shape组件实现
 const Shape: React.FC<ShapeProps> = ({ 
   active, 
   element, 
@@ -138,6 +141,8 @@ const Shape: React.FC<ShapeProps> = ({
     
     // Flag to track if element has moved
     let hasMove = false;
+    let lastX = startX;
+    let lastY = startY;
     
     const handleMouseMove = (moveEvent: MouseEvent) => {
       moveEvent.preventDefault(); // Prevent default to ensure drag works correctly
@@ -148,9 +153,18 @@ const Shape: React.FC<ShapeProps> = ({
       const newTop = curY - startY + startTop;
       const newLeft = curX - startX + startLeft;
       
-      console.log('Moving to:', { curX, curY, newTop, newLeft });
+      // 判断移动方向
+      const isDownward = curY > lastY;
+      const isRightward = curX > lastX;
+      lastX = curX;
+      lastY = curY;
       
-      // Update component position
+      // 使用事件总线发送移动事件，替代DOM自定义事件
+      // 发送移动事件，通知对齐线组件
+      eventBus.emit('component:move', isDownward, isRightward);
+      
+      // 更新组件位置 - 直接更新，不依赖对齐线组件的返回值
+      // 对齐线组件会在必要时自行调用updateComponentPosition
       updateComponentPosition(element.id, newLeft, newTop);
     };
     
@@ -158,6 +172,9 @@ const Shape: React.FC<ShapeProps> = ({
       console.log('Mouse up, drag ended');
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      
+      // 使用事件总线发送停止移动事件
+      eventBus.emit('component:unmove');
       
       // Call position change callback if provided and element has moved
       if (hasMove && onPositionChange) {
@@ -231,42 +248,29 @@ const Shape: React.FC<ShapeProps> = ({
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
   };
-
-  // Calculate style for resize points
+  
+  // Calculate style for each resize point
   const getPointStyle = (point: string) => {
-    const { width, height } = defaultStyle;
+    const pointStyle: React.CSSProperties = { 
+      cursor: cursors[point]
+    };
+    
     const hasT = /t/.test(point);
     const hasB = /b/.test(point);
     const hasL = /l/.test(point);
     const hasR = /r/.test(point);
-    let newLeft = 0;
-    let newTop = 0;
-
-    // Corner points
-    if (point.length === 2) {
-      newLeft = hasL ? 0 : width;
-      newTop = hasT ? 0 : height;
-    } else {
-      // Top/bottom center points
-      if (hasT || hasB) {
-        newLeft = width / 2;
-        newTop = hasT ? 0 : height;
-      }
-
-      // Left/right center points
-      if (hasL || hasR) {
-        newLeft = hasL ? 0 : width;
-        newTop = Math.floor(height / 2);
-      }
-    }
-
-    return {
-      marginLeft: '-4px',
-      marginTop: '-4px',
-      left: `${newLeft}px`,
-      top: `${newTop}px`,
-      cursor: cursors[point] || 'auto',
-    };
+    
+    // Position the resize points at the edges
+    if (hasT) pointStyle.top = '-4px';
+    if (hasB) pointStyle.bottom = '-4px';
+    if (hasL) pointStyle.left = '-4px';
+    if (hasR) pointStyle.right = '-4px';
+    
+    // Center points on edges
+    if (point === 't' || point === 'b') pointStyle.left = 'calc(50% - 4px)';
+    if (point === 'l' || point === 'r') pointStyle.top = 'calc(50% - 4px)';
+    
+    return pointStyle;
   };
 
   // Handle mouse down on resize points
@@ -312,7 +316,7 @@ const Shape: React.FC<ShapeProps> = ({
     let isFirst = true;
     
     // Check if we need to maintain aspect ratio
-    const needLockProportion = false; // TODO: Implement this based on component type
+    const needLockProportion = false;
     
     const handleMouseMove = (moveEvent: MouseEvent) => {
       moveEvent.preventDefault(); // Prevent default to ensure resize works correctly

@@ -34,7 +34,7 @@ interface EditorStore {
 }
 
 export const useEditorStore = create<EditorStore>((set) => ({
-    componentData: [{
+    componentData: localStorage.getItem('历史记录') ? JSON.parse(localStorage.getItem('历史记录') || '[]') : [{
         id: '1',
         index: 1,
         type: 'text',

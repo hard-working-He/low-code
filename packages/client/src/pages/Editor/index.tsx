@@ -10,6 +10,7 @@ import LPicture from '@/components/LPicture';
 import Shape from './Shape';
 import './index.scss';
 import { throttle } from '@/utils/throttle'; 
+import MarkLine from './MarkLine';
 
 // 组件映射表
 const componentMap: Record<string, React.ComponentType<any>> = {
@@ -39,6 +40,10 @@ const Editor: React.FC = () => {
   const recordSnapshot = useSnapShotStore((state) => state.recordSnapshot);
   const snapshotData=useSnapShotStore((state) => state.snapshotData);
   const snapshotIndex=useSnapShotStore((state) => state.snapshotIndex);
+  
+  // 节流记录快照函数
+  const throttledRecordSnapshot = throttle(recordSnapshot, 16);
+  
   // 初始化快照 - 使用useEffect确保只在组件挂载时执行一次
   useEffect(() => {
     console.log('Editor mounted, initializing snapshot with:', componentData);
@@ -54,6 +59,11 @@ const Editor: React.FC = () => {
       }, 100);
     }
   }, []); // 空依赖数组确保只在组件挂载时执行一次
+
+  // 处理组件位置变化
+  const handlePositionChange = () => {
+    throttledRecordSnapshot();
+  };
   
   // 渲染每个组件
   const renderComponent = (component: Component, index: number) => {
@@ -102,25 +112,29 @@ const Editor: React.FC = () => {
     // 使用节流函数防止过于频繁的记录快照
     throttledRecordSnapshot();
   };
-  
-  // 处理组件位置变化
-  const handlePositionChange = () => {
-    console.log('Component position changed');
-    // 使用节流函数防止过于频繁的记录快照
-    throttledRecordSnapshot();
-  };
-  
-  // 使用节流函数优化快照记录
-  const throttledRecordSnapshot = throttle(() => {
-    console.log('Recording snapshot after change');
-    recordSnapshot();
-  }, 1000);
 
   return (
     <div className="editor-container">
-      {/* 画布区域 */}
-      <div className="canvas-container">
-        { snapshotData.length > 0 && snapshotData[snapshotIndex].map((component, index) => renderComponent(component, index))}
+      <div className="editor">
+        <div 
+          className="draw-panel" 
+          style={{ position: 'relative' }}
+        >
+          <div 
+            className="content"
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '100%'
+            }}
+          >
+            {/* 先渲染所有组件 */}
+            {componentData.map((component, index) => renderComponent(component, index))}
+            
+            {/* 渲染对齐线 - 只渲染一次 */}
+            <MarkLine />
+          </div>
+        </div>
       </div>
     </div>
   );

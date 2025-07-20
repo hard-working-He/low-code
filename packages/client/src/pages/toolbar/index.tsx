@@ -4,7 +4,6 @@ import { UndoOutlined, RedoOutlined, LockOutlined, UnlockOutlined } from '@ant-d
 import './index.scss';
 import { useEditorStore, useSnapShotStore } from '@/stores';
 import type { Component } from '@/stores/useEditorStore';
-
 // Placeholder components - implement these as needed
 const Preview = (props: { isScreenshot: boolean; onClose: () => void }) => <div>Preview Component</div>;
 const AceEditor = (props: { onCloseEditor: () => void }) => <div>Ace Editor Component</div>;
@@ -69,9 +68,10 @@ const Toolbar: React.FC = () => {
     setIsScreenshot(isScreenshot);
   };
 
-  const save = () => {
-    // TODO: Implement save functionality
-    recordSnapshot(); // Record snapshot after saving
+  const handleSave = () => {
+    console.log('历史记录', componentData);
+    localStorage.setItem('历史记录', JSON.stringify(componentData));
+
   };
 
   const clearCanvas = () => {
@@ -195,7 +195,7 @@ const Toolbar: React.FC = () => {
         </label>
 
         <Button style={{ marginLeft: '10px' }} onClick={() => preview(false)}>预览</Button>
-        <Button onClick={save}>保存</Button>
+        <Button onClick={handleSave}>保存</Button>
         <Button onClick={clearCanvas}>清空画布</Button>
         <Button disabled={!areaData.components.length} onClick={compose}>组合</Button>
         <Button

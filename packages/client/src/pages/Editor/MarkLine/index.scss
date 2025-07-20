@@ -1,0 +1,31 @@
+/* MarkLine 组件的样式定义 */
+
+/* 标线容器，填满整个可视区域 */
+.mark-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  pointer-events: none; /* 确保鼠标事件可以穿透到下面的组件 */
+  z-index: 9999; /* 确保显示在最上层 */
+}
+
+/* 标线的基础样式 */
+.line {
+  background: #59c7f9; /* 标线颜色：浅蓝色 */
+  position: absolute; /* 绝对定位，以便放置在任意位置 */
+  z-index: 1000; /* 较高的层级确保标线显示在组件上方 */
+}
+
+/* 水平标线样式：宽度100%，细线 */
+.xline {
+  width: 100%;
+  height: 1px;
+}
+
+/* 垂直标线样式：高度100%，细线 */
+.yline {
+  width: 1px;
+  height: 100%;
+} 
