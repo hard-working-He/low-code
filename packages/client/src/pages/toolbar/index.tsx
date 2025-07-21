@@ -7,8 +7,8 @@ import { useEditorStore, useSnapShotStore } from '@/stores';
 import type { Component } from '@/stores/useEditorStore';
 import toast from '@/utils/toast'
 import { message } from 'antd';
-// Placeholder components - implement these as needed
-const Preview = (props: { isScreenshot: boolean; onClose: () => void }) => <div>Preview Component</div>;
+// Import the actual Preview component
+import Preview from '@/pages/Preview';
 const AceEditor = (props: { onCloseEditor: () => void }) => <div>Ace Editor Component</div>;
 
 const Toolbar: React.FC = () => {

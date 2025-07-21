@@ -8,6 +8,7 @@ import LText from '@/components/LText';
 import LButton from '@/components/LButton';
 import LPicture from '@/components/LPicture';
 import toast from '@/utils/toast';
+import { toPng } from 'html-to-image';
 import './index.scss';
 
 // Component mapping table - moved outside to prevent recreation
@@ -25,6 +26,8 @@ interface PreviewProps {
 const Preview: React.FC<PreviewProps> = ({ isScreenshot = false, onClose }) => {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
   
   // Get component data from store
   const componentData = useEditorStore((state) => state.componentData);
@@ -86,10 +89,35 @@ const Preview: React.FC<PreviewProps> = ({ isScreenshot = false, onClose }) => {
 
   // Handle screenshot
   const handleScreenshot = () => {
-    // This is a placeholder for screenshot functionality
-    // In a real implementation, we would use html-to-image or similar library
-    toast('Screenshot functionality would be implemented here');
-    handleClose();
+    if (!canvasRef.current) {
+      toast('截图失败：无法获取画布元素', 'error');
+      return;
+    }
+    
+    setIsCapturing(true);
+    
+    toPng(canvasRef.current, { cacheBust: true })
+      .then((dataUrl) => {
+        // Create a download link
+        const link = document.createElement('a');
+        link.download = `low-code-screenshot-${new Date().getTime()}.png`;
+        link.href = dataUrl;
+        link.click();
+        
+        toast('截图已保存', 'success');
+        
+        // Close the preview after successful capture
+        setTimeout(() => {
+          handleClose();
+        }, 500);
+      })
+      .catch((error) => {
+        console.error('Screenshot failed:', error);
+        toast('截图失败：' + error.message, 'error');
+      })
+      .finally(() => {
+        setIsCapturing(false);
+      });
   };
 
   // Get canvas style
@@ -111,12 +139,13 @@ const Preview: React.FC<PreviewProps> = ({ isScreenshot = false, onClose }) => {
       <Button 
         className="close-button" 
         onClick={isScreenshot ? handleScreenshot : handleClose}
+        loading={isCapturing}
       >
-        {isScreenshot ? '确定' : '关闭'}
+        {isScreenshot ? (isCapturing ? '生成中...' : '生成截图') : '关闭'}
       </Button>
       
       <div className="canvas-container">
-        <div className="canvas" style={getCanvasStyle()}>
+        <div ref={canvasRef} className="canvas" style={getCanvasStyle()}>
           {renderedComponents}
         </div>
       </div>
