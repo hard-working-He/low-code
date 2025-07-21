@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Switch, Input, Modal, Upload } from 'antd';
 import { UndoOutlined, RedoOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import './index.scss';
 import { useEditorStore, useSnapShotStore } from '@/stores';
 import type { Component } from '@/stores/useEditorStore';
+import toast from '@/utils/toast'
+import { message } from 'antd';
 // Placeholder components - implement these as needed
 const Preview = (props: { isScreenshot: boolean; onClose: () => void }) => <div>Preview Component</div>;
 const AceEditor = (props: { onCloseEditor: () => void }) => <div>Ace Editor Component</div>;
 
 const Toolbar: React.FC = () => {
+  const navigate = useNavigate();
+  
   // Editor store functions
   const componentData = useEditorStore((state) => state.componentData);
   const clearComponentData = useEditorStore((state) => state.clearComponentData);
@@ -64,14 +69,19 @@ const Toolbar: React.FC = () => {
   };
 
   const preview = (isScreenshot: boolean) => {
-    setIsShowPreview(true);
-    setIsScreenshot(isScreenshot);
+    if (isScreenshot) {
+      // Navigate to screenshot preview route
+      navigate('/preview/screenshot');
+    } else {
+      // Navigate to normal preview page
+      navigate('/preview');
+    }
   };
 
   const handleSave = () => {
     console.log('历史记录', componentData);
     localStorage.setItem('历史记录', JSON.stringify(componentData));
-
+    toast('保存成功');
   };
 
   const clearCanvas = () => {

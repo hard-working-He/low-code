@@ -1,7 +1,15 @@
 import { useEffect } from 'react'
+import { message } from 'antd'
 // 导入样式
 import './App.css'
 import '@assets/iconfont/iconfont.css'
+import { ToastContainer } from 'react-toastify';
+// Configure message global settings
+message.config({
+  top: 10000,
+  duration: 1,
+  maxCount: 3,
+});
 
 // 导入组件
 import Toolbar from '@pages/toolbar'
@@ -173,6 +181,7 @@ function App() {
           />
         </section>
       </main>
+      <ToastContainer />
     </>
   )
 }
