@@ -44,13 +44,19 @@ const Editor: React.FC = () => {
       // 设置默认组件数据
       setDefaultComponentData([...componentData]);
       
-      // 延迟一下再记录快照，确保默认数据已经设置好
-      setTimeout(() => {
-        recordSnapshot();
-        console.log('Initial snapshot recorded');
-      },100);
+      // 检查是否已有快照记录，如果没有才记录初始快照
+      const snapshotData = useSnapShotStore.getState().snapshotData;
+      if (snapshotData.length === 0) {
+        // 延迟一下再记录快照，确保默认数据已经设置好
+        setTimeout(() => {
+          recordSnapshot();
+          console.log('Initial snapshot recorded');
+        }, 100);
+      } else {
+        console.log('Snapshots already exist, skipping initial recording');
+      }
     }
-  }, [componentData, recordSnapshot]); // 添加正确的依赖项
+  }, []); // 只在组件挂载时运行一次
 
   // 使用 useCallback 优化处理组件位置变化
   const handlePositionChange = useCallback(() => {

@@ -132,5 +132,9 @@ export const useEditorStore = create<EditorStore>((set) => ({
       //删除组件
       deleteComponent: (id: string) => set((state: EditorStore) => ({ componentData: state.componentData.filter((item) => item.id !== id) })),
       //设置组件数据
-      setComponentData: (data: Component[]) => set(() => ({ componentData: data })),
+      setComponentData: (data: Component[]) => {
+        // 确保我们对数据进行深拷贝，避免引用问题
+        const deepCopiedData = JSON.parse(JSON.stringify(data));
+        return set(() => ({ componentData: deepCopiedData }));
+      },
 }))

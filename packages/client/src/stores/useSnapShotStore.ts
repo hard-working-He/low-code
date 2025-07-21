@@ -39,12 +39,22 @@ const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => (
     set((state) => {
       if (state.snapshotIndex >= 0) {
         const newIndex = state.snapshotIndex - 1;
-        let componentData = newIndex >= 0 
-          ? deepCopy(state.snapshotData[newIndex]) 
-          : getDefaultComponentData();
+        let componentData;
+        
+        if (newIndex >= 0) {
+          // Make sure we have valid snapshot data
+          if (!state.snapshotData[newIndex] || !Array.isArray(state.snapshotData[newIndex])) {
+            console.warn('无效的快照数据，无法撤销');
+            return state;
+          }
+          componentData = deepCopy(state.snapshotData[newIndex]); 
+        } else {
+          // If we're going back to initial state, use default data
+          componentData = getDefaultComponentData();
+        }
         
         // 确保componentData是有效数组
-        if (!Array.isArray(componentData) || componentData.length === 0) {
+        if (!Array.isArray(componentData)) {
           console.warn('无效的快照数据，无法撤销');
           return state;
         }
@@ -52,7 +62,7 @@ const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => (
         // 安全地更新组件数据
         try {
           // 使用EditorStore的setComponentData方法更新组件数据
-          useEditorStore.getState().setComponentData(componentData);
+          useEditorStore.setState({ componentData });
           
           console.log('Undo: Setting component data', componentData);
           
@@ -75,7 +85,7 @@ const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => (
         const newIndex = state.snapshotIndex + 1;
         
         // 确保快照数据存在
-        if (!state.snapshotData[newIndex]) {
+        if (!state.snapshotData[newIndex] || !Array.isArray(state.snapshotData[newIndex])) {
           console.warn('找不到要重做的快照数据');
           return state;
         }
@@ -83,16 +93,10 @@ const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => (
         // 深拷贝快照数据
         const componentData = deepCopy(state.snapshotData[newIndex]);
         
-        // 确保componentData是有效数组
-        if (!Array.isArray(componentData) || componentData.length === 0) {
-          console.warn('无效的快照数据，无法重做');
-          return state;
-        }
-        
         // 安全地更新组件数据
         try {
           // 使用EditorStore的setComponentData方法更新组件数据
-          useEditorStore.getState().setComponentData(componentData);
+          useEditorStore.setState({ componentData });
           
           console.log('Redo: Setting component data', componentData);
           
@@ -131,7 +135,7 @@ const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => (
         
         // 删除当前索引之后的所有快照
         let newSnapshotData;
-        if (newIndex > 0 && newIndex <= state.snapshotData.length) {
+        if (newIndex > 0 && newIndex < state.snapshotData.length) {
           // 有现有快照需要截断
           newSnapshotData = [...state.snapshotData.slice(0, newIndex), copyData];
         } else {

@@ -6,6 +6,7 @@ import './index.scss';
 import { useEditorStore, useSnapShotStore } from '@/stores';
 import type { Component } from '@/stores/useEditorStore';
 import toast from '@/utils/toast'
+import { exportJsonFile } from '@/utils/fileUtils';
 // Import the actual Preview component
 import Preview from '@/pages/Preview';
 const AceEditor = (props: { onCloseEditor: () => void }) => <div>Ace Editor Component</div>;
@@ -90,22 +91,22 @@ const Toolbar: React.FC = () => {
 
   const compose = () => {
     // TODO: Implement compose functionality
-    recordSnapshot(); // Record snapshot after composition
+    // Removed recordSnapshot since this function doesn't actually change state yet
   };
 
   const decompose = () => {
     // TODO: Implement decompose functionality
-    recordSnapshot(); // Record snapshot after decomposition
+    // Removed recordSnapshot since this function doesn't actually change state yet
   };
 
   const lock = () => {
     // TODO: Implement lock functionality
-    recordSnapshot(); // Record snapshot after locking
+    // Removed recordSnapshot since this function doesn't actually change state yet
   };
 
   const unlock = () => {
     // TODO: Implement unlock functionality
-    recordSnapshot(); // Record snapshot after unlocking
+    // Removed recordSnapshot since this function doesn't actually change state yet
   };
 
   const handlePreviewChange = () => {
@@ -138,24 +139,18 @@ const Toolbar: React.FC = () => {
 
   const processJSON = () => {
     if (isExport) {
-      // Create a blob with the JSON data
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      // Create a temporary download link
-      const downloadLink = document.createElement('a');
-      downloadLink.href = URL.createObjectURL(blob);
-      downloadLink.download = `low-code-export-${new Date().getTime()}.json`;
-      // Trigger download and cleanup
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
+      exportJsonFile(jsonData, `low-code-export-${new Date().getTime()}.json`);
       toast('导出成功');
     } else if (jsonData) {
       try {
         const importData = JSON.parse(jsonData);
         // Update componentData with imported data
         useEditorStore.setState({ componentData: importData });
-        toast('导入成功');
-        recordSnapshot(); // Record snapshot after importing JSON
+        // Add a small delay to ensure state is updated before recording snapshot
+        setTimeout(() => {
+          recordSnapshot(); // Record snapshot after importing JSON
+          toast('导入成功');
+        }, 0);
       } catch (error) {
         console.error('JSON 解析错误:', error);
         toast('JSON 格式错误，请检查后重试');
