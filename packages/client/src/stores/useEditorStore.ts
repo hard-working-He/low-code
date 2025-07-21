@@ -11,6 +11,10 @@ export interface Component {
   type: string;
   propValue: string|object;
   component?: string;
+  label?: string;
+  icon?: string;
+  animations?: any[];
+  events?: object;
   isLock?: boolean;
   style: {
     top: number;
@@ -18,6 +22,12 @@ export interface Component {
     width?: number;//可选
     height?: number;//可选
     rotate?: number;
+    fontSize?: number;
+    fontWeight?: number;
+    lineHeight?: string;
+    letterSpacing?: number;
+    textAlign?: string;
+    color?: string;
     [key: string]: any;
   };
 }
@@ -28,6 +38,7 @@ interface EditorStore {
   addComponent: (component: Component) => void;
   updateComponentDataPropValue: (element: Component, value: string) => void;
   updateComponentPosition: (id: string, left: number, top: number, additionalStyles?: any) => void;
+  updateComponent: (id: string, key: string, value: any) => void;
   clearComponentData: () => void;
   deleteComponent: (id: string) => void;
   setComponentData: (data: Component[]) => void;
@@ -71,7 +82,7 @@ export const useEditorStore = create<EditorStore>((set) => ({
         })
       })),
       //更新组件位置和样式
-      updateComponentPosition: (id: string, left: number, top: number, additionalStyles?: any) => set((state: EditorStore) => {
+      updateComponentPosition: (id: string, left?: number, top?: number, additionalStyles?: any) => set((state: EditorStore) => {
         console.log('Updating component position:', id, { left, top, ...additionalStyles });
         return {
           componentData: state.componentData.map((item) => {
@@ -80,10 +91,36 @@ export const useEditorStore = create<EditorStore>((set) => ({
                 ...item, 
                 style: { 
                   ...item.style, 
-                  left, 
-                  top,
+                  left: left || item.style.left, 
+                  top: top || item.style.top,
                   ...(additionalStyles || {})
                 } 
+              };
+            }
+            return item;
+          })
+        };
+      }),
+      // 通用更新组件函数，可以更新任何属性包括样式
+      updateComponent: (id: string, key: string, value: any) => set((state: EditorStore) => {
+        return {
+          componentData: state.componentData.map((item) => {
+            if (item.id === id) {
+              // 如果是更新style中的属性
+              if (key.startsWith('style.')) {
+                const styleKey = key.split('.')[1];
+                return {
+                  ...item,
+                  style: {
+                    ...item.style,
+                    [styleKey]: value
+                  }
+                };
+              }
+              // 直接更新组件的顶级属性
+              return {
+                ...item,
+                [key]: value
               };
             }
             return item;

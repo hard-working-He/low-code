@@ -1,0 +1,22 @@
+.attr-list {
+  padding: 16px;
+  overflow-y: auto;
+  height: 100%;
+  background-color: #fff;
+  border-left: 1px solid #e8e8e8;
+
+  .ant-form {
+    .ant-form-item {
+      margin-bottom: 12px;
+    }
+  }
+}
+
+.attr-list-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+  color: #999;
+  font-size: 14px;
+} 

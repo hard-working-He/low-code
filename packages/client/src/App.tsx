@@ -16,6 +16,7 @@ import Toolbar from '@pages/toolbar'
 import CanvasAttr from '@components/CanvasAttr'
 import LeftPanel from '@/pages/LeftPanel'
 import Editor from '@/pages/Editor'
+import AttrList from '@/pages/AttrList'
 
 // 导入自定义hooks和状态管理
 import { useDrop } from '@/hooks'
@@ -175,10 +176,11 @@ function App() {
         </section>
         {/* 右侧属性面板 - 用于编辑画布和组件属性 */}
         <section className='right-panel'>
-          <CanvasAttr
+          {/* <CanvasAttr
             canvasStyleData={canvasStyleData}
             updateCanvasStyleData={updateCanvasStyleData}
-          />
+          /> */}
+          <AttrList />
         </section>
       </main>
       <ToastContainer />
