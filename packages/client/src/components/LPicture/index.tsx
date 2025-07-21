@@ -2,7 +2,7 @@
  * LPicture 组件 - 在画布上渲染图片并提供翻转功能
  * 该组件从 Vue 转换为 React 与 TypeScript
  */
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 /**
  * PropValue 接口 - 定义图片的预期属性
@@ -50,12 +50,14 @@ interface LPictureProps {
  */
 const LPicture = ({ propValue, element }: LPictureProps) => {
   let { url, flip } = propValue || { url: '', flip: { vertical: false, horizontal: false } };
+  // 使用默认的图片URL和本地图片作为替代，避免CORS问题
   if (!url) {
-    url = 'https://encrypted-tbn0.gstatic.com/licensed-image?q=tbn:ANd9GcSOT0Cg6NGLJoqXVQEIbjujUgr71_pkbs15gZXjB67hFeDfgHrBSE8rz4EZjj3HaXYzIFULyBgszkpDXg2OypDFx8bBLKD8cYZe5yBVDQ';
+    url = '/src/assets/title.jpg'; // 使用本地资源作为默认图片
   }
   if (!flip) {
     flip = { vertical: false, horizontal: false };
   }
+
   // 画布 DOM 元素的引用
   const canvasRef = useRef<HTMLCanvasElement>(null)
   // 存储图片元素以在绘制操作中重用的引用
@@ -64,6 +66,8 @@ const LPicture = ({ propValue, element }: LPictureProps) => {
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null)
   // 跟踪首次渲染的标志 - 相当于 Vue 的 isFirst 数据属性
   const isFirstRef = useRef<boolean>(true)
+  // 添加错误状态
+  const [hasError, setHasError] = useState<boolean>(false)
 
   /**
    * drawImage - 处理在画布上绘制图片
@@ -88,6 +92,8 @@ const LPicture = ({ propValue, element }: LPictureProps) => {
       isFirstRef.current = false;
       // 创建新的图片元素
       const img = new Image();
+      // 添加crossOrigin设置来处理CORS
+      img.crossOrigin = "anonymous";
       img.src = propValue.url;
       // 存储在引用中以重用
       imgRef.current = img;
@@ -98,7 +104,16 @@ const LPicture = ({ propValue, element }: LPictureProps) => {
           ctxRef.current.drawImage(img, 0, 0, width, height);
           // 应用任何翻转设置
           mirrorFlip();
+          setHasError(false);
         }
+      };
+      // 添加错误处理
+      img.onerror = () => {
+        setHasError(true);
+        // 尝试加载替代图片
+        img.crossOrigin = "anonymous";
+        img.src = '/src/assets/title.jpg';
+        console.warn('Image failed to load, using fallback image');
       };
     } else {
       // 非首次渲染，只对现有图片应用翻转设置
@@ -184,6 +199,26 @@ const LPicture = ({ propValue, element }: LPictureProps) => {
     }
     // 依赖项确保这在翻转设置变化时运行
   }, [propValue.flip.vertical, propValue.flip.horizontal]);
+
+  // 如果有错误，显示替代内容
+  if (hasError) {
+    return (
+      <div 
+        style={{ 
+          overflow: 'hidden', 
+          width: element.style.width, 
+          height: element.style.height,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#f0f0f0',
+          color: '#999'
+        }}
+      >
+        图片加载失败
+      </div>
+    );
+  }
 
   // 渲染一个带有隐藏溢出的 div，包含画布
   return (

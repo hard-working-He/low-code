@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { message } from 'antd'
 // 导入样式
 import './App.css'
@@ -20,7 +20,7 @@ import AttrList from '@/pages/AttrList'
 
 // 导入自定义hooks和状态管理
 import { useDrop } from '@/hooks'
-import { useAppStore, useEditorStore, useSnapShotStore } from '@/stores'
+import { useAppStore, useEditorStore, useLayerStore, useSnapShotStore } from '@/stores'
 import { componentMap } from '@/constants'
 import calculateRelativePosition  from '@/utils/computeXY'
 
@@ -28,6 +28,9 @@ function App() {
   // 从应用状态管理器中获取画布样式数据和更新方法
   const canvasStyleData = useAppStore((state) => state.canvasStyleData);
   const updateCanvasStyleData = useAppStore((state) => state.updateCanvasStyleData);
+  
+  // 从LayerStore中获取当前选中的组件
+  const curComponent = useLayerStore((state) => state.curComponent);
   
   // 左侧面板的展开/折叠状态管理
   const leftListOpen = useAppStore((state) => state.leftListOpen);
@@ -176,11 +179,10 @@ function App() {
         </section>
         {/* 右侧属性面板 - 用于编辑画布和组件属性 */}
         <section className='right-panel'>
-          {/* <CanvasAttr
+          {curComponent ? <AttrList /> : <CanvasAttr
             canvasStyleData={canvasStyleData}
             updateCanvasStyleData={updateCanvasStyleData}
-          /> */}
-          <AttrList />
+          />}
         </section>
       </main>
       <ToastContainer />

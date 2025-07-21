@@ -38,6 +38,12 @@ const Preview: React.FC<PreviewProps> = ({ isScreenshot = false, onClose }) => {
   
   // Render each component without Shape wrapper
   const renderComponent = (component: Component, index: number) => {
+    // Check if component type is undefined or not registered
+    if (!component.type) {
+      console.warn(`Component with ID "${component.id}" has undefined type`);
+      return null;
+    }
+    
     const DynamicComponent = componentMap[component.type];
     
     // If component type is not found, return null
@@ -96,7 +102,17 @@ const Preview: React.FC<PreviewProps> = ({ isScreenshot = false, onClose }) => {
     
     setIsCapturing(true);
     
-    toPng(canvasRef.current, { cacheBust: true })
+    // Configure the options for html-to-image to handle CORS issues
+    const options = {
+      cacheBust: true,
+      imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFdgJCU1CbeQAAAABJRU5ErkJggg==',
+      skipAutoScale: true,
+      quality: 1.0,
+      pixelRatio: 1,
+      backgroundColor: '#ffffff'
+    };
+    
+    toPng(canvasRef.current, options)
       .then((dataUrl) => {
         // Create a download link
         const link = document.createElement('a');

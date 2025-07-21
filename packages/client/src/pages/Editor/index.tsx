@@ -70,6 +70,15 @@ const Editor: React.FC = () => {
     topComponent();
   }, [setCurComponent, topComponent]);
 
+  // 处理画布点击 - 清除当前选中组件
+  const handleCanvasClick = useCallback((e: React.MouseEvent) => {
+    // 检查点击的是否是画布本身而不是组件
+    if (e.target === e.currentTarget) {
+      console.log('点击了画布空白区域，取消选中组件');
+      setCurComponent(null, -1);
+    }
+  }, [setCurComponent]);
+
   // 使用 useCallback 优化组件内容变化处理
   const handleChange = useCallback((element: Component, value: string) => {
     console.log('Component content changed:', element, value);
@@ -140,6 +149,7 @@ const Editor: React.FC = () => {
               width: '100%',
               height: '100%'
             }}
+            onClick={handleCanvasClick}
           >
             {/* 使用优化后的组件渲染列表 */}
             {renderedComponents}
