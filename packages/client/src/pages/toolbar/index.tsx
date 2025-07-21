@@ -6,7 +6,6 @@ import './index.scss';
 import { useEditorStore, useSnapShotStore } from '@/stores';
 import type { Component } from '@/stores/useEditorStore';
 import toast from '@/utils/toast'
-import { message } from 'antd';
 // Import the actual Preview component
 import Preview from '@/pages/Preview';
 const AceEditor = (props: { onCloseEditor: () => void }) => <div>Ace Editor Component</div>;
@@ -54,14 +53,14 @@ const Toolbar: React.FC = () => {
 
   const onImportJSON = () => {
     setIsExport(false);
+    setJsonData(''); // Clear the textarea when opening import modal
     setIsShowDialog(true);
-    // TODO: Implement import functionality
   };
 
   const onExportJSON = () => {
     setIsExport(true);
     setIsShowDialog(true);
-    // TODO: Implement export functionality
+    setJsonData(JSON.stringify(componentData, null, 2));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,14 +128,41 @@ const Toolbar: React.FC = () => {
   };
 
   const beforeUpload = (file: File) => {
-    // TODO: Implement file upload handler
-    return false;
+    const reader = new FileReader();
+    reader.readAsText(file);
+    reader.onload = () => {
+      setJsonData(reader.result as string);
+    };
+    return false; // Prevent default upload behavior
   };
 
   const processJSON = () => {
-    // TODO: Implement JSON processing
+    if (isExport) {
+      // Create a blob with the JSON data
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      // Create a temporary download link
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(blob);
+      downloadLink.download = `low-code-export-${new Date().getTime()}.json`;
+      // Trigger download and cleanup
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      toast('导出成功');
+    } else if (jsonData) {
+      try {
+        const importData = JSON.parse(jsonData);
+        // Update componentData with imported data
+        useEditorStore.setState({ componentData: importData });
+        toast('导入成功');
+        recordSnapshot(); // Record snapshot after importing JSON
+      } catch (error) {
+        console.error('JSON 解析错误:', error);
+        toast('JSON 格式错误，请检查后重试');
+        return;
+      }
+    }
     setIsShowDialog(false);
-    recordSnapshot(); // Record snapshot after importing/exporting JSON
   };
 
   const handleUndo = () => {
