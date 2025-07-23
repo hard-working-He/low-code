@@ -11,7 +11,7 @@ import { exportJsonFile } from '@/utils/fileUtils';
 import PSD from 'psd.js';
 // Import the actual Preview component
 import Preview from '@/pages/Preview';
-const AceEditor = ({ onCloseEditor }: { onCloseEditor: () => void }) => <div>Ace Editor Component</div>;
+const AceEditor = () => <div>Ace Editor Component</div>;
 
 const Toolbar: React.FC = () => {
   const navigate = useNavigate();
@@ -511,7 +511,7 @@ const Toolbar: React.FC = () => {
 
       {/* Preview component */}
       {isShowPreview && <Preview isScreenshot={isScreenshot} onClose={handlePreviewChange} />}
-      {isShowAceEditor && <AceEditor onCloseEditor={closeEditor} />}
+      {isShowAceEditor && <AceEditor />}
 
       <Modal
         title={isExport ? '导出数据' : isPsdImport ? '导入PSD' : '导入数据'}

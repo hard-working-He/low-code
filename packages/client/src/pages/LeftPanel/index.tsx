@@ -23,7 +23,7 @@ const LeftPanel: React.FC = () => {
         console.log("左侧面板已加载，组件列表可拖拽");
     }, []);
 
-    const handleClick = (e: React.MouseEvent<HTMLDivElement>, index: number) => {
+    const handleClick = (_e: React.MouseEvent<HTMLDivElement>, index: number) => {
         console.log('clicked ', index);
     };
 

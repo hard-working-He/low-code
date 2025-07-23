@@ -128,7 +128,7 @@ export const useEditorStore = create<EditorStore>((set) => ({
         };
       }),
       //清空画布
-      clearComponentData: () => set((state: EditorStore) => ({ componentData: [] })),
+      clearComponentData: () => set(() => ({ componentData: [] })),
       //删除组件
       deleteComponent: (id: string) => set((state: EditorStore) => ({ componentData: state.componentData.filter((item) => item.id !== id) })),
       //设置组件数据
