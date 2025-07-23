@@ -111,6 +111,17 @@ const Shape: React.FC<ShapeProps> = ({
     e.stopPropagation();
     e.preventDefault();
     console.log('Component selected:', element.id);
+    
+    // 如果组件有groupParentId属性，说明是通过点击组内子组件而设置的
+    // 这种情况我们仍然保持当前选择，不再执行后续操作
+    if (element.groupParentId) {
+      console.log('Group child component already selected, not changing selection');
+      if (onClick) {
+        onClick(e);
+      }
+      return;
+    }
+    
     setCurComponent(element, Number(index));
     // Call the onClick prop if it exists
     if (onClick) {

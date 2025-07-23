@@ -16,6 +16,7 @@ export interface Component {
   animations?: any[];
   events?: object;
   isLock?: boolean;
+  groupParentId?: string; // 组内组件的父组ID
   style: {
     top: number;
     left: number;
