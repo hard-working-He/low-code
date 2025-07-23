@@ -40,3 +40,8 @@
     border-color: #2c92d4;
   }
 } 
+@media (max-width: 768px) {
+  .editor-container{
+    height: 80vh;
+  }
+}

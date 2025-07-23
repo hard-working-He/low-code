@@ -63,3 +63,48 @@ html, body, #root {
   z-index: 10;
   margin-top: 40vh;
 }
+
+/* 移动端适配样式 */
+@media (max-width: 768px) {
+  html, body, #root {
+    overflow: auto;
+    height: auto;
+  }
+  .toolbar{
+
+    display: none;
+  }
+  .left-btn{
+    display: none;
+  }
+  .right-panel {
+    display: none;
+  }
+
+  .app-container {
+    flex-direction: column;
+    height: auto;
+    overflow: auto;
+  }
+
+  .left-panel {
+    width: 100% !important;
+    height: auto;
+    max-height: 40vh;
+    overflow-y: auto;
+    &.inactive {
+      width: 100% !important;
+      height: 40px;
+    }
+  }
+
+  .draw-panel {
+    width: 100%;
+    height: 80vh;
+    padding: 10px;
+  }
+
+  .content {
+    height: 80vh;
+  }
+}
