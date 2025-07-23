@@ -3,7 +3,7 @@ import { Button, Switch, Input, Modal, Upload } from 'antd';
 import { UndoOutlined, RedoOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import './index.scss';
-import { useEditorStore, useSnapShotStore, useLayerStore } from '@/stores';
+import { useEditorStore, useSnapShotStore, useLayerStore, useComposeStore } from '@/stores';
 import type { Component } from '@/stores/useEditorStore';
 import toast from '@/utils/toast'
 import { exportJsonFile } from '@/utils/fileUtils';
@@ -42,6 +42,8 @@ const Toolbar: React.FC = () => {
   const [scale, setScale] = useState(100);
   const curComponent = useLayerStore((state) => state.curComponent);
   const [psdLoading, setPsdLoading] = useState(false);
+  // 获取选区数据
+  const areaData = useComposeStore((state) => state.areaData);
   
   // Watch for component data changes and log them
   useEffect(() => {
@@ -50,7 +52,7 @@ const Toolbar: React.FC = () => {
   }, [componentData]);
   
   // Placeholder for component data
-  const areaData = { components: componentData };
+  // const areaData = { components: componentData };
 
   // Event handlers
   const onAceEditorChange = () => {
@@ -326,13 +328,21 @@ const Toolbar: React.FC = () => {
   };
 
   const compose = () => {
-    // TODO: Implement compose functionality
-    // Removed recordSnapshot since this function doesn't actually change state yet
+    // 使用ComposeStore的compose方法进行组件组合
+    useComposeStore.getState().compose();
+    recordSnapshot(); // 记录组合后的快照
+    toast('组件已组合');
   };
 
   const decompose = () => {
-    // TODO: Implement decompose functionality
-    // Removed recordSnapshot since this function doesn't actually change state yet
+    if (!curComponent || curComponent.type !== 'group') {
+      toast('请选择一个组合组件进行拆分');
+      return;
+    }
+    // 使用ComposeStore的decompose方法进行组件拆分
+    useComposeStore.getState().decompose();
+    recordSnapshot(); // 记录拆分后的快照
+    toast('组件已拆分');
   };
 
   const lock = () => {
@@ -477,7 +487,7 @@ const Toolbar: React.FC = () => {
         <Button onClick={clearCanvas}>清空画布</Button>
         <Button disabled={!areaData.components.length} onClick={compose}>组合</Button>
         <Button
-          disabled={!curComponent || curComponent?.isLock || curComponent?.component !== 'Group'}
+          disabled={!curComponent || curComponent?.isLock || curComponent?.type !== 'group'}
           onClick={decompose}
         >
           拆分

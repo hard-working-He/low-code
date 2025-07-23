@@ -1,0 +1,15 @@
+.l-group {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  
+  .l-group-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .l-group-item {
+    position: absolute;
+  }
+} 

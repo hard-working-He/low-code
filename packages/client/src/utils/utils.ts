@@ -26,3 +26,26 @@ export function swap<T>(arr: T[], i: number, j: number): T[] {
     [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
     return newArr;
 }
+
+/**
+ * 简单的DOM选择器函数，类似jQuery的$选择器
+ * @param selector - CSS选择器字符串或DOM元素
+ * @returns 找到的DOM元素或null
+ */
+export function $(selector: string | Element): HTMLElement | null {
+    if (typeof selector === 'string') {
+        return document.querySelector(selector) as HTMLElement | null;
+    }
+    return selector as HTMLElement;
+}
+
+/**
+ * 生成唯一ID
+ * @param prefix - 可选前缀
+ * @returns 唯一ID字符串
+ */
+export function generateId(prefix = ''): string {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000000);
+    return `${prefix}${timestamp}-${random}`;
+}
