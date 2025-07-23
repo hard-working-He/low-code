@@ -375,7 +375,7 @@ const Shape: React.FC<ShapeProps> = ({
   return (
     <div
       ref={shapeRef}
-      className={`shape ${active ? 'active' : ''}`}
+      className={`shape ${active ? 'active' : ''} ${element.isLock ? 'locked' : ''}`}
       onClick={selectCurComponent}
       onMouseDown={handleMouseDownOnShape}
       style={{

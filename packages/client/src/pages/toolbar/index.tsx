@@ -3,7 +3,7 @@ import { Button, Switch, Input, Modal, Upload } from 'antd';
 import { UndoOutlined, RedoOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import './index.scss';
-import { useEditorStore, useSnapShotStore } from '@/stores';
+import { useEditorStore, useSnapShotStore, useLayerStore } from '@/stores';
 import type { Component } from '@/stores/useEditorStore';
 import toast from '@/utils/toast'
 import { exportJsonFile } from '@/utils/fileUtils';
@@ -19,6 +19,8 @@ const Toolbar: React.FC = () => {
   // Editor store functions
   const componentData = useEditorStore((state) => state.componentData);
   const clearComponentData = useEditorStore((state) => state.clearComponentData);
+  const lockComponent = useEditorStore((state) => state.lockComponent);
+  const unlockComponent = useEditorStore((state) => state.unlockComponent);
 
   // Snapshot store functions
   const undo = useSnapShotStore((state) => state.undo);
@@ -38,7 +40,7 @@ const Toolbar: React.FC = () => {
   const [jsonData, setJsonData] = useState('');
   const [canvasStyleData, setCanvasStyleData] = useState({ width: 1200, height: 740 });
   const [scale, setScale] = useState(100);
-  const [curComponent] = useState<Component | null>(null);
+  const curComponent = useLayerStore((state) => state.curComponent);
   const [psdLoading, setPsdLoading] = useState(false);
   
   // Watch for component data changes and log them
@@ -334,13 +336,17 @@ const Toolbar: React.FC = () => {
   };
 
   const lock = () => {
-    // TODO: Implement lock functionality
-    // Removed recordSnapshot since this function doesn't actually change state yet
+    if (!curComponent) return;
+    lockComponent(curComponent.id);
+    recordSnapshot(); // Record snapshot after locking component
+    toast('组件已锁定');
   };
 
   const unlock = () => {
-    // TODO: Implement unlock functionality
-    // Removed recordSnapshot since this function doesn't actually change state yet
+    if (!curComponent) return;
+    unlockComponent(curComponent.id);
+    recordSnapshot(); // Record snapshot after unlocking component
+    toast('组件已解锁');
   };
 
   const handlePreviewChange = () => {

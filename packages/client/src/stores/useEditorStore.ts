@@ -42,6 +42,8 @@ interface EditorStore {
   clearComponentData: () => void;
   deleteComponent: (id: string) => void;
   setComponentData: (data: Component[]) => void;
+  lockComponent: (id: string) => void;
+  unlockComponent: (id: string) => void;
 }
 
 export const useEditorStore = create<EditorStore>((set) => ({
@@ -137,4 +139,22 @@ export const useEditorStore = create<EditorStore>((set) => ({
         const deepCopiedData = JSON.parse(JSON.stringify(data));
         return set(() => ({ componentData: deepCopiedData }));
       },
+      //锁定组件
+      lockComponent: (id: string) => set((state: EditorStore) => ({
+        componentData: state.componentData.map((item) => {
+          if (item.id === id) {
+            return { ...item, isLock: true };
+          }
+          return item;
+        })
+      })),
+      //解锁组件
+      unlockComponent: (id: string) => set((state: EditorStore) => ({
+        componentData: state.componentData.map((item) => {
+          if (item.id === id) {
+            return { ...item, isLock: false };
+          }
+          return item;
+        })
+      })),
 }))
