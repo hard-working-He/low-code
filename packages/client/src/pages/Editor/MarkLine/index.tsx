@@ -73,20 +73,7 @@ const MarkLine: React.FC = () => {
   const curComponent = useLayerStore((state) => state.curComponent); // 当前选中的组件
   const componentData = useEditorStore((state) => state.componentData); // 所有组件数据
   const updateComponentPosition = useEditorStore((state) => state.updateComponentPosition);
-  /**
-   * 设置组件单个样式属性
-   * @param payload - 包含要设置的键和值
-   */
-  const setShapeSingleStyle = (payload: { key: string; value: any }) => {
-    if (curComponent) {
-      updateComponentPosition(
-        curComponent.id,
-        payload.key === 'left' ? payload.value : curComponent.style.left,
-        payload.key === 'top' ? payload.value : curComponent.style.top
-      );
-    }
-  };
-
+  
   // 使用 useEffect 添加事件监听，类似 Vue 的 mounted 生命周期
   useEffect(() => {
     // 处理组件移动事件

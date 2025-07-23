@@ -7,9 +7,11 @@ import { useEditorStore, useSnapShotStore } from '@/stores';
 import type { Component } from '@/stores/useEditorStore';
 import toast from '@/utils/toast'
 import { exportJsonFile } from '@/utils/fileUtils';
+// 正确导入PSD.js库
+import PSD from 'psd.js';
 // Import the actual Preview component
 import Preview from '@/pages/Preview';
-const AceEditor = (props: { onCloseEditor: () => void }) => <div>Ace Editor Component</div>;
+const AceEditor = ({ onCloseEditor }: { onCloseEditor: () => void }) => <div>Ace Editor Component</div>;
 
 const Toolbar: React.FC = () => {
   const navigate = useNavigate();
@@ -28,14 +30,16 @@ const Toolbar: React.FC = () => {
   // State variables
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isShowPreview, setIsShowPreview] = useState(false);
-  const [isScreenshot, setIsScreenshot] = useState(false);
+  const [isScreenshot] = useState(false);
   const [isShowAceEditor, setIsShowAceEditor] = useState(false);
   const [isShowDialog, setIsShowDialog] = useState(false);
   const [isExport, setIsExport] = useState(false);
+  const [isPsdImport, setIsPsdImport] = useState(false);
   const [jsonData, setJsonData] = useState('');
   const [canvasStyleData, setCanvasStyleData] = useState({ width: 1200, height: 740 });
   const [scale, setScale] = useState(100);
-  const [curComponent, setCurComponent] = useState<Component | null>(null);
+  const [curComponent] = useState<Component | null>(null);
+  const [psdLoading, setPsdLoading] = useState(false);
   
   // Watch for component data changes and log them
   useEffect(() => {
@@ -54,18 +58,248 @@ const Toolbar: React.FC = () => {
 
   const onImportJSON = () => {
     setIsExport(false);
+    setIsPsdImport(false);
     setJsonData(''); // Clear the textarea when opening import modal
     setIsShowDialog(true);
   };
 
   const onExportJSON = () => {
     setIsExport(true);
+    setIsPsdImport(false);
     setIsShowDialog(true);
     setJsonData(JSON.stringify(componentData, null, 2));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onImportPSD = () => {
+    setIsExport(false);
+    setIsPsdImport(true);
+    setIsShowDialog(true);
+  };
+
+  const handleFileChange = () => {
     // TODO: Implement file change handler
+  };
+
+  // Function to convert PSD layer data to component format
+  const convertPsdLayerToComponent = (layer: any, index: number): Component | null => {
+    if (!layer.visible || layer.type === 'group') return null;
+
+    const { left, top, width, height } = layer;
+    
+    // Base component properties
+    const baseComponent = {
+      id: index.toString(),
+      index: index,
+      type: 'picture',
+      component: 'LPicture',
+      label: layer.name || 'PSD Layer',
+      icon: 'picture',
+      propValue: '',
+      style: {
+        top,
+        left,
+        width,
+        height,
+        rotate: 0,
+        opacity: layer.opacity / 255, // PSD uses 0-255 for opacity
+      },
+      animations: [],
+      events: {},
+      isLock: false,
+    };
+    
+    // Check if layer has text content
+    if (layer.text) {
+      return {
+        ...baseComponent,
+        type: 'text',
+        component: 'LText',
+        icon: 'text',
+        propValue: layer.text.value || 'Text Layer',
+        style: {
+          ...baseComponent.style,
+          fontSize: layer.text.fontSize || 14,
+          fontWeight: layer.text.fontWeight || 'normal',
+          fontStyle: layer.text.fontStyle || 'normal',
+          textDecoration: layer.text.textDecoration || 'none',
+          color: layer.text.color || '#000000',
+          backgroundColor: 'transparent',
+          textAlign: layer.text.textAlign || 'left',
+          lineHeight: layer.text.lineHeight || 1.5,
+          letterSpacing: layer.text.letterSpacing || 0,
+        }
+      };
+    }
+    
+    // For image layers, attempt to extract image data
+    if (layer.image) {
+      const imgData = layer.image.toBase64 ? layer.image.toBase64() : '';
+      return {
+        ...baseComponent,
+        propValue: imgData.startsWith('data:') ? imgData : `data:image/png;base64,${imgData}`,
+      };
+    }
+    
+    return baseComponent;
+  };
+
+  // Function to handle PSD file upload
+  const handlePsdUpload = (file: File) => {
+    setPsdLoading(true);
+    
+    const reader = new FileReader();
+    reader.readAsArrayBuffer(file);
+    reader.onload = async () => {
+      try {
+        // 正确使用PSD库解析文件
+        // PSD.js API可能不同，我们使用更通用的方法
+        // @ts-ignore - 定义一个通用的psd变量类型
+        let psd: any;
+        
+        // 检查是否存在不同版本的API方法
+        // @ts-ignore - 忽略类型检查，因为我们正在处理动态API
+        if (typeof PSD === 'function') {
+          try {
+            // @ts-ignore
+            psd = new PSD(reader.result as ArrayBuffer);
+            if (psd && typeof psd.parse === 'function') {
+              await psd.parse();
+            }
+          } catch (e) {
+            console.error('构造函数初始化失败:', e);
+          }
+        }
+        
+        // 如果上面的方法失败，尝试其他可能的API
+        if (!psd) {
+          try {
+            // @ts-ignore - 尝试可能的API
+            if (typeof PSD.fromBuffer === 'function') {
+              // @ts-ignore
+              psd = PSD.fromBuffer(reader.result as ArrayBuffer);
+              if (psd && typeof psd.parse === 'function') {
+                psd.parse();
+              }
+            } else {
+              // @ts-ignore
+              psd = PSD;
+            }
+          } catch (e) {
+            console.error('备用方法初始化失败:', e);
+          }
+        }
+        
+        if (!psd) {
+          toast('PSD库初始化失败，请检查库版本');
+          setPsdLoading(false);
+          return;
+        }
+        
+        console.log('PSD对象:', psd);
+        
+        // 获取PSD尺寸信息
+        let psdWidth = 1200;
+        let psdHeight = 740;
+        
+        // @ts-ignore - 忽略类型检查，我们已知psd可能有不同的结构
+        if (psd && psd.header) {
+          // @ts-ignore
+          psdWidth = psd.header.width || psdWidth;
+          // @ts-ignore
+          psdHeight = psd.header.height || psdHeight;
+        }
+        
+        // 更新画布尺寸
+        setCanvasStyleData({ width: psdWidth, height: psdHeight });
+        
+        // 获取图层树
+        let tree: any;
+        // @ts-ignore - 忽略类型检查，我们已知psd可能有不同的结构
+        if (psd && typeof psd.tree === 'function') {
+          // @ts-ignore
+          tree = psd.tree();
+        } else {
+          tree = psd;
+        }
+        
+        if (!tree) {
+          console.error('无法获取PSD图层树');
+          toast('无法读取PSD图层结构');
+          setPsdLoading(false);
+          return;
+        }
+        
+        // 提取所有图层
+        const allLayers: any[] = [];
+        const traverseLayers = (node: any) => {
+          if (!node) return;
+          
+          console.log('处理图层:', node);
+          
+          // 检查节点是否是组或有children方法
+          const isGroup = typeof node.isGroup === 'function' ? node.isGroup() : 
+                         (node.children && typeof node.children === 'function');
+          
+          if (isGroup) {
+            const children = node.children ? node.children() : [];
+            if (Array.isArray(children)) {
+              children.forEach(traverseLayers);
+            }
+          } else {
+            allLayers.push(node);
+          }
+        };
+        
+        try {
+          traverseLayers(tree);
+          console.log('提取的图层:', allLayers);
+        } catch (err) {
+          console.error('遍历图层错误:', err);
+        }
+        
+        if (allLayers.length === 0) {
+          // 如果没有找到图层，可能是库的API不同，尝试直接使用节点列表
+          if (tree.children && Array.isArray(tree.children)) {
+            tree.children.forEach((layer: any) => allLayers.push(layer));
+          }
+        }
+        
+        // 转换图层为组件
+        const newComponents = allLayers
+          .map((layer, index) => {
+            try {
+              return convertPsdLayerToComponent(layer, index);
+            } catch (err) {
+              console.error('图层转换错误:', err);
+              return null;
+            }
+          })
+          .filter(Boolean) as Component[];
+        
+        if (newComponents.length > 0) {
+          // 更新编辑器状态
+          useEditorStore.setState({ componentData: newComponents });
+          recordSnapshot();
+          toast(`PSD 导入成功，共 ${newComponents.length} 个组件`);
+        } else {
+          toast('未能从PSD中提取有效图层');
+        }
+        
+        setPsdLoading(false);
+        setIsShowDialog(false);
+      } catch (error) {
+        console.error('PSD 解析总错误:', error);
+        toast('PSD 解析失败，请检查文件格式和库版本');
+        setPsdLoading(false);
+      }
+    };
+    
+    reader.onerror = () => {
+      toast('PSD 文件读取失败');
+      setPsdLoading(false);
+    };
+    
+    return false; // Prevent default upload behavior
   };
 
   const preview = (isScreenshot: boolean) => {
@@ -79,8 +313,8 @@ const Toolbar: React.FC = () => {
   };
 
   const handleSave = () => {
-    console.log('历史记录', componentData);
-    localStorage.setItem('历史记录', JSON.stringify(componentData));
+    /* console.log('历史记录', componentData);
+    localStorage.setItem('历史记录', JSON.stringify(componentData)); */
     toast('保存成功');
   };
 
@@ -129,6 +363,11 @@ const Toolbar: React.FC = () => {
   };
 
   const beforeUpload = (file: File) => {
+    if (isPsdImport) {
+      return handlePsdUpload(file);
+    }
+    
+    // For JSON import
     const reader = new FileReader();
     reader.readAsText(file);
     reader.onload = () => {
@@ -138,6 +377,12 @@ const Toolbar: React.FC = () => {
   };
 
   const processJSON = () => {
+    if (isPsdImport) {
+      // PSD导入不需要在这里处理，已经在beforeUpload处理了
+      setIsShowDialog(false);
+      return;
+    }
+    
     if (isExport) {
       exportJsonFile(jsonData, `low-code-export-${new Date().getTime()}.json`);
       toast('导出成功');
@@ -269,7 +514,7 @@ const Toolbar: React.FC = () => {
       {isShowAceEditor && <AceEditor onCloseEditor={closeEditor} />}
 
       <Modal
-        title={isExport ? '导出数据' : '导入数据'}
+        title={isExport ? '导出数据' : isPsdImport ? '导入PSD' : '导入数据'}
         open={isShowDialog}
         onCancel={() => setIsShowDialog(false)}
         footer={[
@@ -280,23 +525,43 @@ const Toolbar: React.FC = () => {
               action="/" 
               beforeUpload={beforeUpload}
               showUploadList={false}
-              accept="application/json"
+              accept={isPsdImport ? ".psd" : "application/json"}
             >
               <Button type="primary">选择 JSON 文件</Button>
+              <Button onClick={onImportPSD}>选择 PSD 文件</Button>
             </Upload>
           ),
-          <Button key="ok" type="primary" onClick={processJSON}>确 定</Button>
+          <Button 
+            key="ok" 
+            type="primary" 
+            onClick={processJSON} 
+            loading={psdLoading}
+            disabled={isPsdImport ? false : (!jsonData && !isExport)}
+          >
+            确 定
+          </Button>
         ]}
         width={600}
         maskClosable={false}
         keyboard={false}
       >
-        <Input.TextArea
-          value={jsonData}
-          onChange={e => setJsonData(e.target.value)}
-          rows={20}
-          placeholder="请输入 JSON 数据"
-        />
+        {!isPsdImport && (
+          <Input.TextArea
+            value={jsonData}
+            onChange={e => setJsonData(e.target.value)}
+            rows={20}
+            placeholder="请输入 JSON 数据"
+          />
+        )}
+        {isPsdImport && (
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            {psdLoading ? (
+              <div>正在解析 PSD 文件，请稍候...</div>
+            ) : (
+              <div>请选择一个 PSD 文件进行导入</div>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

@@ -29,7 +29,7 @@ interface SnapShotActions {
 }
 
 // Create the snapshot store
-const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => ({
+const useSnapShotStore = create<SnapShotState & SnapShotActions>((set) => ({
   // State
   snapshotData: [],
   snapshotIndex: -1,

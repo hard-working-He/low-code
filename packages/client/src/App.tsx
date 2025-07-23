@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { message } from 'antd'
 // 导入样式
 import './App.css'
@@ -127,17 +127,17 @@ function App() {
         }, 0);
       }
     },
-    onDragEnter: (e) => {
+    onDragEnter: () => {
       // 进入拖放区域时更新状态
       //console.log('进入放置区域');
       setIsOver(true);
     },
-    onDragLeave: (e) => {
+    onDragLeave: () => {
       // 离开拖放区域时更新状态
       //console.log('离开放置区域');
       setIsOver(false);
     },
-    onDragOver: (e) => {
+    onDragOver: () => {
       // 仅在控制台记录拖拽经过事件
       // console.log('拖拽经过放置区域');
     },

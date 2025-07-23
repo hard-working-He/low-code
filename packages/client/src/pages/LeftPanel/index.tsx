@@ -40,10 +40,10 @@ const LeftPanel: React.FC = () => {
                 const { dragProps } = useDrag({
                     type: 'index',
                     data: index,
-                    onDragStart: (e) => {
+                    onDragStart: () => {
                         //console.log('拖拽开始，组件索引:', index);
                     },
-                    onDragEnd: (e) => {
+                    onDragEnd: () => {
                        // console.log('拖拽结束，组件索引:', index);
                     }
                 });

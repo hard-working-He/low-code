@@ -36,7 +36,7 @@ const CanvasAttr: React.FC<CanvasAttrProps> = ({ canvasStyleData, updateCanvasSt
             {isIncludesColor(key) ? (
               <ColorPicker
                 value={canvasStyleData[key as keyof CanvasStyleData] as string}
-                onChange={(color, hex) => updateCanvasStyleData(key as keyof CanvasStyleData, hex)}
+                onChange={(_color, hex) => updateCanvasStyleData(key as keyof CanvasStyleData, hex)}
               />
             ) : (
               <Input
