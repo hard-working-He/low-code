@@ -70,7 +70,7 @@ const renderComponent = (component: Component, selectedComponentId?: string, onC
   );
 };
 
-const LGroup: React.FC<LGroupProps> = ({ propValue, element, style, onInput }) => {
+const LGroup: React.FC<LGroupProps> = ({ propValue, element, style }) => {
   // 获取当前选中的组件和设置组件方法
   const setCurComponent = useLayerStore((state) => state.setCurComponent);
   const curComponent = useLayerStore((state) => state.curComponent);

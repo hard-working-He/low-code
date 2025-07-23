@@ -279,9 +279,9 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
     // 要遍历选择区域的每个组件，获取它们的位置信息进行比较
     let top = Infinity, left = Infinity;
     let right = -Infinity, bottom = -Infinity;
-    const editor = get().editor;
-    const editorX = editor?.getBoundingClientRect().x || 0;
-    const editorY = editor?.getBoundingClientRect().y || 0;
+    //const editor = get().editor;
+    // const editorX = editor?.getBoundingClientRect().x || 0;
+    // const editorY = editor?.getBoundingClientRect().y || 0;
     
     areaData.forEach(component => {
       const { style } = component;
