@@ -23,7 +23,7 @@ const LeftPanel: React.FC = () => {
         console.log("左侧面板已加载，组件列表可拖拽");
     }, []);
 
-    const handleClick = (_e: React.MouseEvent<HTMLDivElement>, index: number) => {
+    const handleClick = (index: number) => {
         console.log('clicked ', index);
     };
 
@@ -54,7 +54,7 @@ const LeftPanel: React.FC = () => {
                         className="list"
                         {...dragProps}
                         data-index={index}
-                        onClick={(e) => handleClick(e, index)}
+                        onClick={() => handleClick(index)}
                     >
                         {item.icon && (
                             item.icon.includes('antd:') ? 

@@ -347,10 +347,6 @@ const Toolbar: React.FC = () => {
     setIsShowPreview(false);
   };
 
-  const closeEditor = () => {
-    setIsShowAceEditor(false);
-  };
-
   const handleScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setScale(Number(e.target.value));
     // 保留界面显示，但不再触发实际的缩放功能
