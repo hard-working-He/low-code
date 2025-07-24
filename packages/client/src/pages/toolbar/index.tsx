@@ -11,7 +11,7 @@ import { exportJsonFile } from '@/utils/fileUtils';
 import PSD from 'psd.js';
 // Import the actual Preview component
 import Preview from '@/pages/Preview';
-const AceEditor = () => <div>Ace Editor Component</div>;
+//const AceEditor = () => <div>Ace Editor Component</div>;
 
 const Toolbar: React.FC = () => {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ const Toolbar: React.FC = () => {
   // Snapshot store functions
   const undo = useSnapShotStore((state) => state.undo);
   const redo = useSnapShotStore((state) => state.redo);
-  const recordSnapshot = useSnapShotStore((state) => state.recordSnapshot);
+  // 删除未使用的 recordSnapshot 变量
   const snapshotIndex = useSnapShotStore((state) => state.snapshotIndex);
   const snapshots = useSnapShotStore((state) => state.snapshots);
   
@@ -45,12 +45,11 @@ const Toolbar: React.FC = () => {
   // State variables
   const [isShowPreview, setIsShowPreview] = useState(false);
   const [isScreenshot] = useState(false);
-  const [isShowAceEditor, setIsShowAceEditor] = useState(false);
+  //const [isShowAceEditor, setIsShowAceEditor] = useState(false);
   const [isShowDialog, setIsShowDialog] = useState(false);
   const [isExport, setIsExport] = useState(false);
   const [isPsdImport, setIsPsdImport] = useState(false);
   const [jsonData, setJsonData] = useState('');
-  const [canvasStyleData, setCanvasStyleData] = useState({ width: 1200, height: 740 });
   const curComponent = useLayerStore((state) => state.curComponent);
   const [psdLoading, setPsdLoading] = useState(false);
   // 获取选区数据
@@ -70,14 +69,7 @@ const Toolbar: React.FC = () => {
     console.log('Component data updated:', componentData);
   }, [componentData]);
   
-  // Placeholder for component data
-  // const areaData = { components: componentData };
-
   // Event handlers
-  const onAceEditorChange = () => {
-    setIsShowAceEditor(true);
-    // TODO: Implement editor functionality
-  };
 
   const onImportJSON = () => {
     setIsExport(false);
@@ -97,10 +89,6 @@ const Toolbar: React.FC = () => {
     setIsExport(false);
     setIsPsdImport(true);
     setIsShowDialog(true);
-  };
-
-  const handleFileChange = () => {
-    // TODO: Implement file change handler
   };
 
   // Function to convert PSD layer data to component format
@@ -233,7 +221,7 @@ const Toolbar: React.FC = () => {
         }
         
         // 更新画布尺寸
-        setCanvasStyleData({ width: psdWidth, height: psdHeight });
+        // Removed unused setCanvasStyleData call
         
         // 获取图层树
         let tree: any;
@@ -544,13 +532,13 @@ const Toolbar: React.FC = () => {
        {/*  <div className="canvas-config">
           <span>画布大小</span>
           <Input 
-            value={canvasStyleData.width} 
-            onChange={e => setCanvasStyleData({...canvasStyleData, width: Number(e.target.value)})} 
+            value="1200"
+            onChange={() => {}} 
           />
           <span>*</span>
           <Input 
-            value={canvasStyleData.height} 
-            onChange={e => setCanvasStyleData({...canvasStyleData, height: Number(e.target.value)})} 
+            value="740"
+            onChange={() => {}} 
           />
         </div> */}
 {/*         <div className="canvas-config">
@@ -568,7 +556,7 @@ const Toolbar: React.FC = () => {
 
       {/* Preview component */}
       {isShowPreview && <Preview isScreenshot={isScreenshot} onClose={handlePreviewChange} />}
-      {isShowAceEditor && <AceEditor />}
+      {/* {isShowAceEditor && <AceEditor />} */}
 
       <Modal
         title={isExport ? '导出数据' : isPsdImport ? '导入PSD' : '导入数据'}
