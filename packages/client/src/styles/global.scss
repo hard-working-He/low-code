@@ -1,44 +1,43 @@
 :root {
-    --main-bg-color: #fff;
+    /* Light mode variables */
+    --main-bg-color: #ffffff;
     --secondary-bg-color: #f5f5f5;
-    --button-text-color: #606266;
-    --button-active-bg-color: #ecf5ff;
-    --button-active-text-color: #409eff;
-    --text-color: #606266;
-    --border-color: #dcdfe6;
-    --toolbar-border-color: #dcdfe6;
-    --placeholder-text-color: #333;
-    --placeholder-bg-color: #fff;
+    --button-text-color: #333333;
+    --text-color: #333333;
+    --border-color: #e4e7ed;
+    --placeholder-text-color: #999999;
+    --placeholder-bg-color: #f5f5f5;
     --actived-text-color: #409eff;
     --actived-bg-color: #ecf5ff;
-    --ace-bg-color: #e4e7ed;
+    --ace-bg-color: #ffffff;
     --disable-text-color: #c0c4cc;
-    --disable-border-color: #ebeef5;
+    --disable-border-color: #e4e7ed;
     --dropdown-border-color: #e4e7ed;
-    --panel-bg-color: #fff;
-    --canvas-bg-color: #fff;
+    --toolbar-border-color: #dcdfe6;
+    --button-active-text-color: #409eff;
+    --panel-bg-color: #ffffff;
+    --canvas-bg-color: #ffffff;
     --editor-border-color: #d9d9d9;
 }
 
-/* 为暗黑模式定义颜色变量 */
-.dark {
-    --main-bg-color: #1a1a1a;
-    --secondary-bg-color: #2c2c2c;
+/* Dark mode styles */
+body.dark {
+    --main-bg-color: #2e2e2e;
+    --secondary-bg-color: #1a1a1a;
     --button-text-color: #fff;
-    --button-active-bg-color: #1e1e1e;
-    --button-active-text-color: #409eff;
     --text-color: #fff;
-    --border-color: #434343;
-    --toolbar-border-color: #434343;
+    --border-color: #161616b8;
     --placeholder-text-color: #a0a0a0;
-    --placeholder-bg-color: #2c2c2c;
+    --placeholder-bg-color: #242424;
     --actived-text-color: #409eff;
     --actived-bg-color: #1e1e1e;
-    --ace-bg-color: #1e1e1e;
-    --disable-text-color: #6c6c6c;
-    --disable-border-color: #3a3a3a;
-    --dropdown-border-color: #434343;
-    --panel-bg-color: #252525;
+    --ace-bg-color: #000;
+    --disable-text-color: #c0c4cc;
+    --disable-border-color: #4b4a4ad9;
+    --dropdown-border-color: #000000d9;
+    --toolbar-border-color: #333333;
+    --button-active-text-color: #409eff;
+    --panel-bg-color: #1d1e1f;
     --canvas-bg-color: #2c2c2c;
     --editor-border-color: #434343;
 }
@@ -319,6 +318,36 @@
         
         &.ant-switch-checked {
             background-color: var(--actived-text-color);
+        }
+    }
+    
+    /* 确保表单元素在暗黑模式下文本颜色正确 */
+    .ant-form {
+        color: var(--text-color);
+        
+        .ant-form-item-label > label {
+            color: var(--text-color);
+        }
+        
+        .ant-input-number-handler-wrap {
+            background-color: var(--secondary-bg-color);
+        }
+    }
+    
+    /* 确保颜色选择器显示正确 */
+    .ant-color-picker {
+        .ant-color-picker-trigger {
+            background-color: var(--secondary-bg-color);
+            border-color: var(--border-color);
+        }
+    }
+    
+    /* 确保Typography组件文本颜色在暗黑模式下正确 */
+    .ant-typography {
+        color: var(--text-color) !important;
+        
+        h1, h2, h3, h4, h5 {
+            color: var(--text-color) !important;
         }
     }
 }

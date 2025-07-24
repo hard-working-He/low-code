@@ -12,7 +12,7 @@
   .list {
     width: 80px;
     height: 40px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     cursor: grab;
     text-align: center;
     padding: 2px 5px;
@@ -21,10 +21,11 @@
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    background-color: var(--main-bg-color);
 
     &:hover {
-      background-color: #f5f5f5;
-      border-color: #ccc;
+      background-color: var(--secondary-bg-color);
+      border-color: var(--actived-text-color);
     }
 
     &:active {
@@ -34,6 +35,21 @@
     .iconfont {
       font-size: 18px;
       margin-bottom: 2px;
+      color: var(--text-color);
+    }
+
+    /* Ant Design 图标样式 */
+    .anticon {
+      font-size: 18px;
+      margin-bottom: 2px;
+      color: var(--text-color);
+    }
+
+    /* Element UI 图标样式 */
+    [class^="el-icon-"] {
+      font-size: 18px;
+      margin-bottom: 2px;
+      color: var(--text-color);
     }
 
     .component-label {
@@ -42,6 +58,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       width: 100%;
+      color: var(--text-color);
     }
   }
 } 

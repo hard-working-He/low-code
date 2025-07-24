@@ -2,12 +2,26 @@
   padding: 16px;
   overflow-y: auto;
   height: 100%;
-  background-color: #fff;
-  border-left: 1px solid #e8e8e8;
+  background-color: var(--panel-bg-color);
+  border-left: 1px solid var(--border-color);
+  color: var(--text-color);
+
+  .ant-typography {
+    color: var(--text-color);
+  }
+
+  h5.ant-typography {
+    color: var(--text-color) !important;
+    margin-bottom: 16px;
+  }
 
   .ant-form {
     .ant-form-item {
       margin-bottom: 12px;
+      
+      .ant-form-item-label > label {
+        color: var(--text-color);
+      }
     }
   }
 }
@@ -17,6 +31,6 @@
   justify-content: center;
   align-items: center;
   height: 100px;
-  color: #999;
+  color: var(--text-color);
   font-size: 14px;
 } 

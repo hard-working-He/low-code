@@ -18,6 +18,19 @@ body.dark,
     --disable-border-color: #4b4a4ad9;
     --dropdown-border-color: #000000d9;
 
+    /* 确保AttrList和CanvasAttr中的文本在暗黑模式下为白色 */
+    .attr-list, .attr-container {
+        color: #fff !important;
+        
+        .title, p, span, label, .ant-form-item-label > label {
+            color: #fff !important;
+        }
+        
+        .ant-form-item {
+            color: #fff !important;
+        }
+    }
+
     .right .el-tabs__item.is-top.is-active {
         color: #409eff;
     }

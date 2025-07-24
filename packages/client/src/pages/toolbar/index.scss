@@ -1,111 +1,106 @@
-.toolbar {
-    padding: 15px 10px;
-    white-space: nowrap;
-    overflow-x: auto;
-    background: var(--main-bg-color);
-    border-color: var(--ace-bg-color);
-    border-bottom: 1px solid var(--border-color);
-
-    /* Add styles for buttons to have responsive margins */
-    .ant-btn {
-        margin: 0 4px; /* Default small margins for limited space */
-    }
-
-    /* Media queries for responsive button margins */
-    @media (min-width: 768px) {
-        .ant-btn {
-            margin: 0 1px; /* Medium margins for medium screens */
-        }
-    }
-
-    @media (min-width: 1200px) {
-        .ant-btn {
-            margin: 0 12px; /* Larger margins for large screens */
-        }
-    }
-    
-    .mode-toggle-text {
-        color: var(--text-color);
-        margin-left: 5px;
-    }
-    
-    .canvas-config {
-        display: inline-block;
-        margin-left: 10px;
-        font-size: 14px;
-        color: var(--text-color);
-
-        input {
-            width: 50px;
-            margin-left: 4px;
-            outline: none;
-            padding: 0 5px;
-            border: 1px solid var(--border-color);
-            color: #606266;
-        }
-
-        span {
-            margin-left: 10px;
-        }
-    }
-
-    .el-button--small {
-        background: var(--main-bg-color);
-        border: 1px solid var(--toolbar-border-color);
-        color: var(--button-text-color);
-    }
-
-    .el-button--small:hover {
-        background: var(--button-active-text-color);
-        border-color: var(--actived-bg-color);
-        color: var(--main-bg-color);
-    }
-
-    .insert {
-        display: inline-block;
-        line-height: 1;
+.toolbar-container {
+    .toolbar {
+        padding: 15px 10px;
         white-space: nowrap;
-        cursor: pointer;
-        border: 1px solid var(--toolbar-border-color);
-        color: var(--text-color);
-        appearance: none;
-        text-align: center;
-        box-sizing: border-box;
-        outline: 0;
-        margin: 0;
-        transition: .1s;
-        font-weight: 500;
-        padding: 9px 15px;
-        font-size: 12px;
-        border-radius: 3px;
-        margin-left: 10px;
-    }
-
-    .insert {
+        overflow-x: auto;
         background: var(--main-bg-color);
-        border: 1px solid var(--toolbar-border-color);
-        color: var(--button-text-color);
+        border-bottom: 1px solid var(--border-color);
 
-        &:active {
-            background: var(--button-active-text-color);
-            border-color: var(--actived-bg-color);
-            color: var(--main-bg-color);
-        }
-
-        &:hover {
-            background: var(--button-active-text-color);
-            border-color: var(--actived-bg-color);
-            color: var(--main-bg-color);
-        }
-    }
-
-    .el-button.is-disabled {
-        color: var(--disable-text-color);
-        border-color: var(--disable-border-color);
-        background: var(--main-bg-color);
-
-        &:hover {
+        /* Add styles for buttons */
+        .ant-btn {
+            margin: 0 4px;
             background: var(--main-bg-color);
+            border: 1px solid var(--toolbar-border-color);
+            color: var(--button-text-color);
+
+            &:hover {
+                background: var(--secondary-bg-color);
+                border-color: var(--actived-text-color);
+                color: var(--actived-text-color);
+            }
+
+            &:disabled {
+                color: var(--disable-text-color);
+                border-color: var(--disable-border-color);
+                background: var(--main-bg-color);
+
+                &:hover {
+                    background: var(--main-bg-color);
+                }
+            }
+        }
+
+        /* Media queries for responsive button margins */
+        @media (min-width: 768px) {
+            .ant-btn {
+                margin: 0 8px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .ant-btn {
+                margin: 0 12px;
+            }
+        }
+        
+        .mode-toggle-text {
+            color: var(--text-color);
+            margin-left: 5px;
+        }
+        
+        .canvas-config {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 14px;
+            color: var(--text-color);
+
+            input {
+                width: 50px;
+                margin-left: 4px;
+                outline: none;
+                padding: 0 5px;
+                border: 1px solid var(--border-color);
+                color: var(--text-color);
+                background: var(--main-bg-color);
+            }
+
+            span {
+                margin-left: 10px;
+                color: var(--text-color);
+            }
+        }
+
+        .insert {
+            display: inline-block;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid var(--toolbar-border-color);
+            color: var(--text-color);
+            appearance: none;
+            text-align: center;
+            box-sizing: border-box;
+            outline: 0;
+            margin: 0;
+            transition: .1s;
+            font-weight: 500;
+            padding: 9px 15px;
+            font-size: 12px;
+            border-radius: 3px;
+            margin-left: 10px;
+            background: var(--main-bg-color);
+
+            &:active {
+                background: var(--secondary-bg-color);
+                border-color: var(--actived-text-color);
+                color: var(--actived-text-color);
+            }
+
+            &:hover {
+                background: var(--secondary-bg-color);
+                border-color: var(--actived-text-color);
+                color: var(--actived-text-color);
+            }
         }
     }
 }
@@ -116,5 +111,14 @@
 
     & > * {
         margin-left: 10px;
+    }
+}
+
+/* Dark mode switch styles */
+.dark-mode-switch {
+    margin-left: 12px;
+    
+    &.ant-switch-checked {
+        background-color: var(--actived-text-color);
     }
 }

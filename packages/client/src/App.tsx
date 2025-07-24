@@ -31,8 +31,9 @@ function App() {
   const canvasStyleData = useAppStore((state) => state.canvasStyleData);
   const updateCanvasStyleData = useAppStore((state) => state.updateCanvasStyleData);
   
-  // 从应用状态获取暗黑模式设置
+  // 从应用状态获取暗黑模式设置和同步方法
   const isDarkMode = useAppStore((state) => state.isDarkMode);
+  const syncSystemDarkMode = useAppStore((state) => state.syncSystemDarkMode);
   
   // 从LayerStore中获取当前选中的组件
   const curComponent = useLayerStore((state) => state.curComponent);
@@ -51,12 +52,19 @@ function App() {
   // 从快照存储获取记录快照的方法
   const recordSnapshot = useSnapShotStore((state) => state.recordSnapshot);
   
-  // 初始化时应用暗黑模式
+  // 初始化时同步系统暗黑模式
+  useEffect(() => {
+    syncSystemDarkMode();
+  }, []);
+  
+  // 监听系统暗黑模式变化
   useEffect(() => {
     if (isDarkMode) {
       document.body.classList.add('dark');
+      console.log('系统暗黑模式已启用');
     } else {
       document.body.classList.remove('dark');
+      console.log('系统暗黑模式已禁用');
     }
   }, [isDarkMode]);
   
@@ -185,7 +193,7 @@ function App() {
               position: 'relative',
               width: '100%',
               height: '100%',
-              background: isOver ? 'rgba(0, 0, 255, 0.1)' : 'transparent',
+              background: isOver ? 'rgba(0, 0, 255, 0.1)' : 'var(--canvas-bg-color)',
             }}
           >
             <Editor />
