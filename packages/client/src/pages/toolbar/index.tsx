@@ -323,8 +323,8 @@ const Toolbar: React.FC = () => {
   };
 
   const handleSave = () => {
-    /* console.log('历史记录', componentData);
-    localStorage.setItem('历史记录', JSON.stringify(componentData)); */
+    /* console.log('历史记录', componentData);*/
+    localStorage.setItem('历史记录', JSON.stringify(componentData)); 
     toast('保存成功');
   };
 
