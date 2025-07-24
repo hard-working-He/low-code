@@ -7,7 +7,7 @@ body.dark,
     --main-bg-color: #2e2e2e;
     --secondary-bg-color: #1a1a1a;
     --button-text-color: #fff;
-    --text-color: #d9d9d9;
+    --text-color: #fff; /* 从 #d9d9d9 改为 #fff */
     --border-color: #161616b8;
     --placeholder-text-color: #a0a0a0;
     --placeholder-bg-color: #242424;
@@ -30,7 +30,7 @@ body.dark,
 
         span,
         .el-select-dropdown__item {
-            color: #ddd;
+            color: #fff; /* 从 #ddd 改为 #fff */
         }
 
         .el-select-dropdown__item.hover,
@@ -73,7 +73,7 @@ body.dark,
         border-bottom: 1px solid #000;
         
         .btn {
-            color: #d9d9d9;
+            color: #fff; /* 从 #d9d9d9 改为 #fff */
             background-color: #2d2d2d;
             border-color: #555;
             
@@ -85,6 +85,10 @@ body.dark,
                 background-color: #252525;
                 color: #777;
             }
+        }
+        
+        span {
+            color: #fff; /* 添加工具栏中span元素的文本颜色 */
         }
     }
     
@@ -115,14 +119,14 @@ body.dark,
         
         .content {
             background-color: #2c2c2c;
-            color: #d9d9d9;
+            color: #fff; /* 从 #d9d9d9 改为 #fff */
         }
     }
     
     /* 表单控件 */
     input, textarea, select {
         background-color: #2d2d2d;
-        color: #d9d9d9;
+        color: #fff; /* 从 #d9d9d9 改为 #fff */
         border-color: #444;
         
         &:focus {
@@ -137,7 +141,7 @@ body.dark,
     /* 按钮样式 */
     button, .ant-btn {
         background-color: #2d2d2d;
-        color: #d9d9d9;
+        color: #fff; /* 从 #d9d9d9 改为 #fff */
         border-color: #444;
         
         &:hover, &:focus {

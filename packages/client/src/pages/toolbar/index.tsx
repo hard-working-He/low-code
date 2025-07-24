@@ -454,7 +454,7 @@ const Toolbar: React.FC = () => {
     console.log('Before undo: snapshotIndex=', snapshotIndex, ', snapshots length=', snapshots.length);
     
     try {
-      if (snapshotIndex > 0) {
+      if (snapshotIndex >= 0) {
         undo();
         
         setTimeout(() => {
@@ -492,13 +492,13 @@ const Toolbar: React.FC = () => {
   };
 
   // 计算撤销和重做按钮是否应该禁用
-  const canUndo = snapshotIndex > 0;
+  const canUndo = snapshotIndex >= 0;
   const canRedo = snapshotIndex < snapshots.length - 1;
   
   return (
     <div className={`toolbar-container ${isDarkMode ? 'dark' : ''}`}>
       <div className={isDarkMode ? 'dark toolbar' : 'toolbar'}>
-        <Button onClick={onAceEditorChange}>JSON</Button>
+        {/* <Button onClick={onAceEditorChange}>JSON</Button> */}
         <Button onClick={onImportJSON}>导入</Button>
         <Button onClick={onExportJSON}>导出</Button>
         <Button 
@@ -516,7 +516,7 @@ const Toolbar: React.FC = () => {
           重做
         </Button>
         
-        <label htmlFor="input" className="insert">
+       {/*  <label htmlFor="input" className="insert">
           插入图片
           <input
             id="input"
@@ -524,7 +524,7 @@ const Toolbar: React.FC = () => {
             hidden
             onChange={handleFileChange}
           />
-        </label>
+        </label> */}
 
         <Button style={{ marginLeft: '10px' }} onClick={() => preview(false)}>预览</Button>
         <Button onClick={handleSave}>保存</Button>
@@ -541,7 +541,7 @@ const Toolbar: React.FC = () => {
         <Button disabled={!curComponent || !curComponent?.isLock} onClick={unlock} icon={<UnlockOutlined />}>解锁</Button>
         <Button onClick={() => preview(true)}>截图</Button>
 
-        <div className="canvas-config">
+       {/*  <div className="canvas-config">
           <span>画布大小</span>
           <Input 
             value={canvasStyleData.width} 
@@ -552,7 +552,7 @@ const Toolbar: React.FC = () => {
             value={canvasStyleData.height} 
             onChange={e => setCanvasStyleData({...canvasStyleData, height: Number(e.target.value)})} 
           />
-        </div>
+        </div> */}
 {/*         <div className="canvas-config">
           <span>画布比例</span>
           <Input value={scale} onChange={handleScaleChange} />
@@ -563,6 +563,7 @@ const Toolbar: React.FC = () => {
           className="dark-mode-switch"
           onChange={handleToggleDarkMode}
         />
+        <span className="mode-toggle-text">切换{isDarkMode ? '亮' : '暗'}模式</span>
       </div>
 
       {/* Preview component */}

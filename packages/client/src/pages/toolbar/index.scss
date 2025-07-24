@@ -6,6 +6,29 @@
     border-color: var(--ace-bg-color);
     border-bottom: 1px solid var(--border-color);
 
+    /* Add styles for buttons to have responsive margins */
+    .ant-btn {
+        margin: 0 4px; /* Default small margins for limited space */
+    }
+
+    /* Media queries for responsive button margins */
+    @media (min-width: 768px) {
+        .ant-btn {
+            margin: 0 1px; /* Medium margins for medium screens */
+        }
+    }
+
+    @media (min-width: 1200px) {
+        .ant-btn {
+            margin: 0 12px; /* Larger margins for large screens */
+        }
+    }
+    
+    .mode-toggle-text {
+        color: var(--text-color);
+        margin-left: 5px;
+    }
+    
     .canvas-config {
         display: inline-block;
         margin-left: 10px;

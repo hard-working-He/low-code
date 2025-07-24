@@ -24,10 +24,10 @@
 .dark {
     --main-bg-color: #1a1a1a;
     --secondary-bg-color: #2c2c2c;
-    --button-text-color: #d9d9d9;
+    --button-text-color: #fff;
     --button-active-bg-color: #1e1e1e;
     --button-active-text-color: #409eff;
-    --text-color: #d9d9d9;
+    --text-color: #fff;
     --border-color: #434343;
     --toolbar-border-color: #434343;
     --placeholder-text-color: #a0a0a0;
@@ -124,6 +124,10 @@
                         color: var(--disable-text-color);
                         border-color: var(--disable-border-color);
                     }
+                }
+                
+                span {
+                    color: var(--text-color);
                 }
             }
         }
