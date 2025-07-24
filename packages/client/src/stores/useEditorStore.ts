@@ -3,10 +3,11 @@
 编辑器使用 JSX 语法结合 render() 将每个组件逐个渲染到画布 */
 
 import { create } from 'zustand'
+import { useSnapShotStore } from './useSnapShotStore';
 
 // 组件类型定义
 export interface Component {
-  id: string;
+  id: string;//唯一id
   index: number;
   type: string;
   propValue: string|object;
@@ -33,6 +34,63 @@ export interface Component {
   };
 }
 
+// 记录快照的辅助函数，确保在状态更新后调用
+// 用于控制是否记录拖拽过程中的状态变化
+let isDragging = false;
+let hasRecordedInitialDragState = false;
+
+// 标记开始拖拽
+export const startDrag = () => {
+  isDragging = true;
+  hasRecordedInitialDragState = false;
+};
+
+// 标记结束拖拽
+export const endDrag = () => {
+  if (isDragging) {
+    // 拖拽结束时记录最终状态
+    setTimeout(() => {
+      try {
+        useSnapShotStore.getState().recordSnapshot();
+        console.log('已记录拖拽结束状态的快照');
+      } catch (error) {
+        console.error('Error recording drag end snapshot:', error);
+      }
+    }, 0);
+  }
+  isDragging = false;
+  hasRecordedInitialDragState = false;
+};
+
+// 记录快照的辅助函数，确保在状态更新后调用
+const recordSnapshotAfterUpdate = () => {
+  // 如果正在拖拽中
+  if (isDragging) {
+    // 只记录拖拽开始的状态，忽略中间状态
+    if (!hasRecordedInitialDragState) {
+      hasRecordedInitialDragState = true;
+      setTimeout(() => {
+        try {
+          useSnapShotStore.getState().recordSnapshot();
+          console.log('已记录拖拽开始状态的快照');
+        } catch (error) {
+          console.error('Error recording drag start snapshot:', error);
+        }
+      }, 0);
+    }
+    return; // 拖拽过程中不记录其他快照
+  }
+  
+  // 非拖拽状态下的正常快照记录
+  setTimeout(() => {
+    try {
+      useSnapShotStore.getState().recordSnapshot();
+    } catch (error) {
+      console.error('Error recording snapshot:', error);
+    }
+  }, 0);
+};
+
 // 编辑器存储类型
 interface EditorStore {
   componentData: Component[];
@@ -45,117 +103,139 @@ interface EditorStore {
   setComponentData: (data: Component[]) => void;
   lockComponent: (id: string) => void;
   unlockComponent: (id: string) => void;
+  // 拖拽状态控制函数
+  startDrag: () => void;
+  endDrag: () => void;
 }
 
 export const useEditorStore = create<EditorStore>((set) => ({
+    // 添加拖拽状态控制函数到store
+    startDrag,
+    endDrag,
     // 从localStorage中获取历史记录，如果localStorage中没有历史记录，则初始化一个默认值
-    componentData: localStorage.getItem('历史记录') ? JSON.parse(localStorage.getItem('历史记录') || '[]') : [{
-        id: '1',
-        index: 1,
-        type: 'text',
-        propValue: 'Hello, world!',
-        style: {
-            top: 0,
-            left: 0,
-            width: 100,
-            height: 100,
-        },
-    },
-    {
-        id: '2',
-        index: 2,
-        type: 'button',
-        propValue: 'Hello, world!',
-        style: {
-            top: 100,
-            left: 100,
-            width: 100,
-            height: 100,
-        },
-    }
-],
-    addComponent: (component: Component) => set((state: EditorStore) => ({ componentData: [...state.componentData, component] })),
+    componentData: localStorage.getItem('历史记录') ? JSON.parse(localStorage.getItem('历史记录') || '[]') : 
+    [],
+    addComponent: (component: Component) => set((state: EditorStore) => {
+      const result = { componentData: [...state.componentData, component] };
+      recordSnapshotAfterUpdate();
+      return result;
+    }),
+    
     //更新propValue
-    updateComponentDataPropValue: (element: Component, value: string) => set((state: EditorStore) => ({
+    updateComponentDataPropValue: (element: Component, value: string) => set((state: EditorStore) => {
+        const result = {
+          componentData: state.componentData.map((item) => {
+            if (item.id === element.id) {
+              return { ...item, propValue: value };
+            }
+            return item;
+          })
+        };
+        recordSnapshotAfterUpdate();
+        return result;
+      }),
+      
+    //更新组件位置和样式
+    updateComponentPosition: (id: string, left?: number, top?: number, additionalStyles?: any) => set((state: EditorStore) => {
+      console.log('Updating component position:', id, { left, top, ...additionalStyles });
+      const result = {
         componentData: state.componentData.map((item) => {
-          if (item.id === element.id) {
-            return { ...item, propValue: value };
+          if (item.id === id) {
+            return { 
+              ...item, 
+              style: { 
+                ...item.style, 
+                left: left || item.style.left, 
+                top: top || item.style.top,
+                ...(additionalStyles || {})
+              } 
+            };
           }
           return item;
         })
-      })),
-      //更新组件位置和样式
-      updateComponentPosition: (id: string, left?: number, top?: number, additionalStyles?: any) => set((state: EditorStore) => {
-        console.log('Updating component position:', id, { left, top, ...additionalStyles });
-        return {
-          componentData: state.componentData.map((item) => {
-            if (item.id === id) {
-              return { 
-                ...item, 
-                style: { 
-                  ...item.style, 
-                  left: left || item.style.left, 
-                  top: top || item.style.top,
-                  ...(additionalStyles || {})
-                } 
-              };
-            }
-            return item;
-          })
-        };
-      }),
-      // 通用更新组件函数，可以更新任何属性包括样式
-      updateComponent: (id: string, key: string, value: any) => set((state: EditorStore) => {
-        return {
-          componentData: state.componentData.map((item) => {
-            if (item.id === id) {
-              // 如果是更新style中的属性
-              if (key.startsWith('style.')) {
-                const styleKey = key.split('.')[1];
-                return {
-                  ...item,
-                  style: {
-                    ...item.style,
-                    [styleKey]: value
-                  }
-                };
-              }
-              // 直接更新组件的顶级属性
+      };
+      
+      recordSnapshotAfterUpdate();
+      return result;
+    }),
+      
+    // 通用更新组件函数，可以更新任何属性包括样式
+    updateComponent: (id: string, key: string, value: any) => set((state: EditorStore) => {
+      const result = {
+        componentData: state.componentData.map((item) => {
+          if (item.id === id) {
+            // 如果是更新style中的属性
+            if (key.startsWith('style.')) {
+              const styleKey = key.split('.')[1];
               return {
                 ...item,
-                [key]: value
+                style: {
+                  ...item.style,
+                  [styleKey]: value
+                }
               };
             }
-            return item;
-          })
-        };
-      }),
-      //清空画布
-      clearComponentData: () => set(() => ({ componentData: [] })),
-      //删除组件
-      deleteComponent: (id: string) => set((state: EditorStore) => ({ componentData: state.componentData.filter((item) => item.id !== id) })),
-      //设置组件数据
-      setComponentData: (data: Component[]) => {
-        // 确保我们对数据进行深拷贝，避免引用问题
-        const deepCopiedData = JSON.parse(JSON.stringify(data));
-        return set(() => ({ componentData: deepCopiedData }));
-      },
-      //锁定组件
-      lockComponent: (id: string) => set((state: EditorStore) => ({
+            // 直接更新组件的顶级属性
+            return {
+              ...item,
+              [key]: value
+            };
+          }
+          return item;
+        })
+      };
+      recordSnapshotAfterUpdate();
+      return result;
+    }),
+      
+    //清空画布
+    clearComponentData: () => set(() => {
+      const result = { componentData: [] };
+      recordSnapshotAfterUpdate();
+      return result;
+    }),
+      
+    //删除组件
+    deleteComponent: (id: string) => set((state: EditorStore) => {
+      const result = { componentData: state.componentData.filter((item) => item.id !== id) };
+      recordSnapshotAfterUpdate();
+      return result;
+    }),
+      
+    //设置组件数据
+    setComponentData: (data: Component[]) => {
+      // 确保我们对数据进行深拷贝，避免引用问题
+      const deepCopiedData = JSON.parse(JSON.stringify(data));
+      const result = set(() => ({ componentData: deepCopiedData }));
+      recordSnapshotAfterUpdate();
+      return result;
+    },
+      
+    //锁定组件
+    lockComponent: (id: string) => set((state: EditorStore) => {
+      const result = {
         componentData: state.componentData.map((item) => {
           if (item.id === id) {
             return { ...item, isLock: true };
           }
           return item;
         })
-      })),
-      //解锁组件
-      unlockComponent: (id: string) => set((state: EditorStore) => ({
+      };
+      recordSnapshotAfterUpdate();
+      return result;
+    }),
+      
+    //解锁组件
+    unlockComponent: (id: string) => set((state: EditorStore) => {
+      const result = {
         componentData: state.componentData.map((item) => {
           if (item.id === id) {
             return { ...item, isLock: false };
           }
           return item;
         })
-      })),
+      };
+      recordSnapshotAfterUpdate();
+      return result;
+    }),
 }))

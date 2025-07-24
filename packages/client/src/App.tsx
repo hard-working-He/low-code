@@ -117,7 +117,7 @@ function App() {
             if (components && components.length > 0) {
               recordSnapshot();
               console.log('添加组件后的componentData:', components,
-                '添加组件后快照数据:', useSnapShotStore.getState().snapshotData,'索引',useSnapShotStore.getState().snapshotIndex);
+                '添加组件后快照数据:', useSnapShotStore.getState().snapshots,'索引',useSnapShotStore.getState().snapshotIndex);
             } else {
               console.warn('组件数据为空，跳过快照记录');
             }

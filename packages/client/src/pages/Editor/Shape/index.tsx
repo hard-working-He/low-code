@@ -129,6 +129,9 @@ const Shape: React.FC<ShapeProps> = ({
     }
   };
 
+  // 从useEditorStore导入拖拽标记函数
+  const { startDrag, endDrag } = useEditorStore.getState();
+
   // Handle mouse down on shape (for dragging)
   const handleMouseDownOnShape = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -149,6 +152,9 @@ const Shape: React.FC<ShapeProps> = ({
     const startLeft = Number(pos.left || 0);
     
     console.log('Start drag position:', { startX, startY, startTop, startLeft });
+    
+    // 标记开始拖拽，只记录初始状态
+    startDrag();
     
     // Flag to track if element has moved
     let hasMove = false;
@@ -187,6 +193,11 @@ const Shape: React.FC<ShapeProps> = ({
       // 使用事件总线发送停止移动事件
       eventBus.emit('component:unmove');
       
+      // 标记拖拽结束，记录最终状态
+      if (hasMove) {
+        endDrag();
+      }
+      
       // Call position change callback if provided and element has moved
       if (hasMove && onPositionChange) {
         onPositionChange();
@@ -210,6 +221,9 @@ const Shape: React.FC<ShapeProps> = ({
     const startY = e.clientY;
     const startX = e.clientX;
     const startRotate = pos.rotate || 0;
+    
+    // 标记开始拖拽旋转
+    useEditorStore.getState().startDrag();
     
     // Get element center point
     const rect = shapeRef.current.getBoundingClientRect();
@@ -249,6 +263,11 @@ const Shape: React.FC<ShapeProps> = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       setCursors(getCursor());
+      
+      // 标记拖拽旋转结束
+      if (hasMove) {
+        useEditorStore.getState().endDrag();
+      }
       
       // Call position change callback if provided and element has moved
       if (hasMove && onPositionChange) {
@@ -294,6 +313,9 @@ const Shape: React.FC<ShapeProps> = ({
     if (!shapeRef.current) return;
     
     const style = { ...defaultStyle };
+    
+    // 标记开始拖拽调整大小
+    useEditorStore.getState().startDrag();
     
     // Calculate proportions for aspect ratio
     const proportion = style.width / style.height;
@@ -371,6 +393,13 @@ const Shape: React.FC<ShapeProps> = ({
       console.log('Resize ended');
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      
+      // 标记拖拽调整大小结束
+      if (needSave) {
+        useEditorStore.getState().endDrag();
+        console.log('已记录调整大小结束状态的快照');
+      }
+      
       needSave && console.log('Save component changes for undo/redo');
     };
     

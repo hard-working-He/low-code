@@ -27,7 +27,16 @@ const Toolbar: React.FC = () => {
   const redo = useSnapShotStore((state) => state.redo);
   const recordSnapshot = useSnapShotStore((state) => state.recordSnapshot);
   const snapshotIndex = useSnapShotStore((state) => state.snapshotIndex);
-  const snapshotData = useSnapShotStore((state) => state.snapshotData);
+  const snapshots = useSnapShotStore((state) => state.snapshots);
+  
+  // 输出快照状态信息，用于调试
+  useEffect(() => {
+    console.log('快照状态:', {
+      snapshotIndex: snapshotIndex,
+      snapshots: snapshots,
+      snapshotsLength: snapshots?.length || 0
+    });
+  }, [snapshotIndex, snapshots]);
   
   // State variables
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -39,7 +48,6 @@ const Toolbar: React.FC = () => {
   const [isPsdImport, setIsPsdImport] = useState(false);
   const [jsonData, setJsonData] = useState('');
   const [canvasStyleData, setCanvasStyleData] = useState({ width: 1200, height: 740 });
-  const [scale, setScale] = useState(100);
   const curComponent = useLayerStore((state) => state.curComponent);
   const [psdLoading, setPsdLoading] = useState(false);
   // 获取选区数据
@@ -48,7 +56,6 @@ const Toolbar: React.FC = () => {
   // Watch for component data changes and log them
   useEffect(() => {
     console.log('Component data updated:', componentData);
-    console.log('所以useSnapShotStore.getState().snapshotData', useSnapShotStore.getState().snapshotData);
   }, [componentData]);
   
   // Placeholder for component data
@@ -281,9 +288,8 @@ const Toolbar: React.FC = () => {
           .filter(Boolean) as Component[];
         
         if (newComponents.length > 0) {
-          // 更新编辑器状态
-          useEditorStore.setState({ componentData: newComponents });
-          recordSnapshot();
+          // 更新编辑器状态 - 使用setComponentData自动记录快照
+          useEditorStore.getState().setComponentData(newComponents);
           toast(`PSD 导入成功，共 ${newComponents.length} 个组件`);
         } else {
           toast('未能从PSD中提取有效图层');
@@ -324,13 +330,18 @@ const Toolbar: React.FC = () => {
 
   const clearCanvas = () => {
     clearComponentData();
-    recordSnapshot(); // Record snapshot after clearing canvas
+    // clearComponentData 已经会自动调用 recordSnapshot，不需要再手动调用
+    console.log('清空画布后的快照状态:', {
+      snapshotIndex: useSnapShotStore.getState().snapshotIndex,
+      snapshots: useSnapShotStore.getState().snapshots,
+      componentData: useEditorStore.getState().componentData
+    });
   };
 
   const compose = () => {
     // 使用ComposeStore的compose方法进行组件组合
     useComposeStore.getState().compose();
-    recordSnapshot(); // 记录组合后的快照
+    // compose操作会改变componentData，已经自动触发recordSnapshot
     toast('组件已组合');
   };
 
@@ -341,21 +352,21 @@ const Toolbar: React.FC = () => {
     }
     // 使用ComposeStore的decompose方法进行组件拆分
     useComposeStore.getState().decompose();
-    recordSnapshot(); // 记录拆分后的快照
+    // decompose操作会改变componentData，已经自动触发recordSnapshot
     toast('组件已拆分');
   };
 
   const lock = () => {
     if (!curComponent) return;
     lockComponent(curComponent.id);
-    recordSnapshot(); // Record snapshot after locking component
+    // lockComponent已自动调用recordSnapshot
     toast('组件已锁定');
   };
 
   const unlock = () => {
     if (!curComponent) return;
     unlockComponent(curComponent.id);
-    recordSnapshot(); // Record snapshot after unlocking component
+    // unlockComponent已自动调用recordSnapshot
     toast('组件已解锁');
   };
 
@@ -363,11 +374,11 @@ const Toolbar: React.FC = () => {
     setIsShowPreview(false);
   };
 
-  const handleScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /* const handleScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setScale(Number(e.target.value));
     // 保留界面显示，但不再触发实际的缩放功能
     console.log('画布比例已更改为:', e.target.value + '%', '(缩放功能已禁用)');
-  };
+  }; */
 
   const handleToggleDarkMode = (checked: boolean) => {
     setIsDarkMode(checked);
@@ -399,16 +410,12 @@ const Toolbar: React.FC = () => {
       exportJsonFile(jsonData, `low-code-export-${new Date().getTime()}.json`);
       toast('导出成功');
     } else if (jsonData) {
-      try {
-        const importData = JSON.parse(jsonData);
-        // Update componentData with imported data
-        useEditorStore.setState({ componentData: importData });
-        // Add a small delay to ensure state is updated before recording snapshot
-        setTimeout(() => {
-          recordSnapshot(); // Record snapshot after importing JSON
+              try {
+          const importData = JSON.parse(jsonData);
+          // 使用setComponentData函数更新组件数据，它会自动记录快照
+          useEditorStore.getState().setComponentData(importData);
           toast('导入成功');
-        }, 0);
-      } catch (error) {
+        } catch (error) {
         console.error('JSON 解析错误:', error);
         toast('JSON 格式错误，请检查后重试');
         return;
@@ -417,39 +424,64 @@ const Toolbar: React.FC = () => {
     setIsShowDialog(false);
   };
 
+  // 监听componentData变化，输出详细的调试信息
+  useEffect(() => {
+    if (componentData && componentData.length > 0) {
+      console.log('添加组件后的componentData详情:', {
+        组件数量: componentData.length,
+        组件列表: componentData.map(c => ({ id: c.id, type: c.type })),
+        快照索引: snapshotIndex,
+        快照数组: snapshots,
+        快照长度: snapshots?.length || 0
+      });
+    }
+  }, [componentData, snapshotIndex, snapshots]);
+
   const handleUndo = () => {
     console.log('undo');  
-    console.log('Before undo: snapshotIndex=', snapshotIndex, ', snapshotData=', snapshotData);
+    console.log('Before undo: snapshotIndex=', snapshotIndex, ', snapshots length=', snapshots.length);
     
     try {
-      undo();
-      
-      setTimeout(() => {
-        console.log('After undo: snapshotIndex=', useSnapShotStore.getState().snapshotIndex);
-      }, 10);
+      if (snapshotIndex > 0) {
+        undo();
+        
+        setTimeout(() => {
+          console.log('After undo: snapshotIndex=', useSnapShotStore.getState().snapshotIndex);
+        }, 10);
+      } else {
+        console.log('无法撤销：已经是第一个历史记录');
+        toast('已经是第一个历史记录');
+      }
     } catch (error) {
       console.error('撤销操作失败:', error);
+      toast('撤销操作失败');
     }
   };
 
   const handleRedo = () => {
     console.log('redo');
-    console.log('Before redo: snapshotIndex=', snapshotIndex, ', snapshotData=', snapshotData);
+    console.log('Before redo: snapshotIndex=', snapshotIndex, ', snapshots length=', snapshots.length);
     
     try {
-      redo();
-      
-      setTimeout(() => {
-        console.log('After redo: snapshotIndex=', useSnapShotStore.getState().snapshotIndex);
-      }, 10);
+      if (snapshotIndex < snapshots.length - 1) {
+        redo();
+        
+        setTimeout(() => {
+          console.log('After redo: snapshotIndex=', useSnapShotStore.getState().snapshotIndex);
+        }, 10);
+      } else {
+        console.log('无法重做：已经是最新的历史记录');
+        toast('已经是最新的历史记录');
+      }
     } catch (error) {
       console.error('重做操作失败:', error);
+      toast('重做操作失败');
     }
   };
 
   // 计算撤销和重做按钮是否应该禁用
   const canUndo = snapshotIndex > 0;
-  const canRedo = snapshotIndex < snapshotData.length - 1;
+  const canRedo = snapshotIndex < snapshots.length - 1;
   
   return (
     <div className='toolbar-container'>
@@ -509,11 +541,11 @@ const Toolbar: React.FC = () => {
             onChange={e => setCanvasStyleData({...canvasStyleData, height: Number(e.target.value)})} 
           />
         </div>
-        <div className="canvas-config">
+{/*         <div className="canvas-config">
           <span>画布比例</span>
           <Input value={scale} onChange={handleScaleChange} />
           <span>%</span>
-        </div>
+        </div> */}
         <Switch
           checked={isDarkMode}
           className="dark-mode-switch"

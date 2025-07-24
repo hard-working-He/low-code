@@ -8,7 +8,6 @@ import LPicture from '@/components/LPicture';
 import LGroup from '@/components/LGroup';
 import Shape from './Shape';
 import MarkLine from './MarkLine';
-import { throttle } from '@/utils/throttle'; 
 import './index.scss';
 
 // 组件映射表 - 移到组件外部避免重新创建
@@ -29,8 +28,7 @@ const Editor: React.FC = () => {
   const topComponent = useLayerStore((state) => state.topComponent);
   const setCurComponent = useLayerStore((state) => state.setCurComponent);
 
-  // 从 SnapshotStore 中获取快照相关函数
-  const recordSnapshot = useSnapShotStore((state) => state.recordSnapshot);
+  // 不再需要从SnapshotStore中获取recordSnapshot，因为它现在在EditorStore中自动调用
   
   // 从 ComposeStore 中获取选区相关函数
   const isShowArea = useComposeStore((state) => state.isShowArea);
@@ -48,30 +46,43 @@ const Editor: React.FC = () => {
   // 编辑器引用
   const editorRef = useRef<HTMLDivElement>(null);
   
-  // 使用 useCallback 优化节流记录快照函数
-  const throttledRecordSnapshot = useCallback(
-    throttle(() => recordSnapshot(), 16),
-    [recordSnapshot]
-  );
+  // 使用ref跟踪初始化状态，防止StrictMode下重复初始化
+  const hasInitialized = useRef(false);
   
   // 初始化快照 - 添加正确的依赖项
   useEffect(() => {
     console.log('Editor mounted, initializing snapshot with:', componentData);
     
-    if (componentData.length > 0) {
-      // 设置默认组件数据
-      setDefaultComponentData([...componentData]);
-      
-      // 检查是否已有快照记录，如果没有才记录初始快照
-      const snapshotData = useSnapShotStore.getState().snapshotData;
-      if (snapshotData.length === 0) {
-        // 延迟一下再记录快照，确保默认数据已经设置好
-        setTimeout(() => {
-          recordSnapshot();
-          console.log('Initial snapshot recorded');
-        }, 100);
-      } else {
-        console.log('Snapshots already exist, skipping initial recording');
+    if (componentData.length > 0 && !hasInitialized.current) {
+      try {
+        // 设置默认组件数据
+        setDefaultComponentData([...componentData]);
+        
+        // 检查是否已有快照记录，如果没有才记录初始快照
+        const snapshots = useSnapShotStore.getState().snapshots;
+        if (snapshots.length === 0) {
+          // 延迟一下再记录快照，确保默认数据已经设置好
+          const initTimer = setTimeout(() => {
+            try {
+              useSnapShotStore.getState().recordSnapshot();
+              console.log('Initial snapshot recorded');
+            } catch (error) {
+              console.error('Failed to record initial snapshot:', error);
+            } finally {
+              // 无论成功失败都标记为已初始化，避免重复尝试
+              hasInitialized.current = true;
+            }
+          }, 100);
+          
+          // 清理计时器，防止内存泄漏
+          return () => clearTimeout(initTimer);
+        } else {
+          console.log('Snapshots already exist, skipping initial recording');
+          hasInitialized.current = true;
+        }
+      } catch (error) {
+        console.error('Error during editor initialization:', error);
+        hasInitialized.current = true; // 即使失败也标记为已初始化，避免重复尝试
       }
     }
     
@@ -79,10 +90,10 @@ const Editor: React.FC = () => {
     getEditor();
   }, []); // 只在组件挂载时运行一次
 
-  // 使用 useCallback 优化处理组件位置变化
+  // 使用 useCallback 优化处理组件位置变化 - 不再需要手动调用recordSnapshot
   const handlePositionChange = useCallback(() => {
-    throttledRecordSnapshot();
-  }, [throttledRecordSnapshot]);
+    // 空函数，位置变更时的recordSnapshot已在EditorStore中自动调用
+  }, []);
   
   // 使用 useCallback 优化组件点击处理
   const handleShapeClick = useCallback((component: Component, index: number) => {
@@ -99,14 +110,13 @@ const Editor: React.FC = () => {
       setCurComponent(null, -1);
     }
   }, [setCurComponent]);
-
-  // 使用 useCallback 优化组件内容变化处理
+  
+  // 使用 useCallback 优化组件内容变化处理 - 不再需要手动调用recordSnapshot
   const handleChange = useCallback((element: Component, value: string) => {
     console.log('Component content changed:', element, value);
     updateComponentDataPropValue(element, value);
-    // 使用节流函数防止过于频繁的记录快照
-    throttledRecordSnapshot();
-  }, [updateComponentDataPropValue, throttledRecordSnapshot]);
+    // recordSnapshot现在在updateComponentDataPropValue中自动调用
+  }, [updateComponentDataPropValue]);
   
   // 鼠标按下事件处理函数 - 开始选择区域
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
