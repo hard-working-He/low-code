@@ -15,22 +15,50 @@
     --disable-text-color: #c0c4cc;
     --disable-border-color: #ebeef5;
     --dropdown-border-color: #e4e7ed;
+    --panel-bg-color: #fff;
+    --canvas-bg-color: #fff;
+    --editor-border-color: #d9d9d9;
+}
+
+/* 为暗黑模式定义颜色变量 */
+.dark {
+    --main-bg-color: #1a1a1a;
+    --secondary-bg-color: #2c2c2c;
+    --button-text-color: #d9d9d9;
+    --button-active-bg-color: #1e1e1e;
+    --button-active-text-color: #409eff;
+    --text-color: #d9d9d9;
+    --border-color: #434343;
+    --toolbar-border-color: #434343;
+    --placeholder-text-color: #a0a0a0;
+    --placeholder-bg-color: #2c2c2c;
+    --actived-text-color: #409eff;
+    --actived-bg-color: #1e1e1e;
+    --ace-bg-color: #1e1e1e;
+    --disable-text-color: #6c6c6c;
+    --disable-border-color: #3a3a3a;
+    --dropdown-border-color: #434343;
+    --panel-bg-color: #252525;
+    --canvas-bg-color: #2c2c2c;
+    --editor-border-color: #434343;
 }
 
 .home {
-    overflow: hidden;
-
+    height: 100vh;
     .attr-list {
         overflow: auto;
         padding: 10px 14px;
         padding-top: 0;
         height: 100%;
+        background-color: var(--panel-bg-color);
+        color: var(--text-color);
     }
 
     .title {
         font-weight: bold;
         font-size: 16px;
         margin-bottom: 10px;
+        color: var(--text-color);
     }
 
     .el-collapse-item__content {
@@ -51,6 +79,64 @@
 
         .el-dialog__title {
             color: var(--text-color);
+        }
+    }
+    
+    /* 暗黑模式下的编辑器容器 */
+    &.dark {
+        .app-container {
+            background-color: var(--main-bg-color);
+        }
+        
+        .editor-container {
+            background-color: var(--secondary-bg-color);
+            border-color: var(--editor-border-color);
+        }
+        
+        .draw-panel {
+            background-color: var(--panel-bg-color);
+            color: var(--text-color);
+        }
+        
+        .left-panel, .right-panel {
+            background-color: var(--secondary-bg-color);
+            color: var(--text-color);
+            border-color: var(--border-color);
+        }
+        
+        .toolbar-container {
+            background-color: var(--secondary-bg-color);
+            
+            .toolbar {
+                background-color: var(--secondary-bg-color);
+                border-color: var(--border-color);
+                
+                button {
+                    background-color: var(--button-active-bg-color);
+                    color: var(--button-text-color);
+                    border-color: var(--border-color);
+                    
+                    &:hover {
+                        color: var(--actived-text-color);
+                    }
+                    
+                    &:disabled {
+                        color: var(--disable-text-color);
+                        border-color: var(--disable-border-color);
+                    }
+                }
+            }
+        }
+        
+        /* 样式面板 */
+        .attr-list {
+            background-color: var(--panel-bg-color);
+            
+            input, select, .ant-input {
+                background-color: var(--secondary-bg-color);
+                color: var(--text-color);
+                border-color: var(--border-color);
+            }
         }
     }
 }
@@ -172,5 +258,63 @@
         background: var(--button-active-text-color);
         border-color: var(--actived-bg-color);
         color: var(--main-bg-color);
+    }
+}
+
+/* Ant Design 组件暗黑模式样式 */
+.dark {
+    .ant-btn {
+        background-color: var(--secondary-bg-color);
+        color: var(--text-color);
+        border-color: var(--border-color);
+        
+        &:hover, &:focus {
+            color: var(--actived-text-color);
+            border-color: var(--actived-text-color);
+        }
+        
+        &:disabled {
+            color: var(--disable-text-color);
+            background: var(--disable-border-color);
+        }
+    }
+    
+    .ant-input, .ant-input-number {
+        background-color: var(--secondary-bg-color);
+        color: var(--text-color);
+        border-color: var(--border-color);
+        
+        &:focus, &:hover {
+            border-color: var(--actived-text-color);
+        }
+    }
+    
+    .ant-modal-content {
+        background-color: var(--panel-bg-color);
+        
+        .ant-modal-header {
+            background-color: var(--panel-bg-color);
+            border-color: var(--border-color);
+            
+            .ant-modal-title {
+                color: var(--text-color);
+            }
+        }
+        
+        .ant-modal-body {
+            color: var(--text-color);
+        }
+        
+        .ant-modal-footer {
+            border-color: var(--border-color);
+        }
+    }
+    
+    .ant-switch {
+        background-color: rgba(0, 0, 0, 0.25);
+        
+        &.ant-switch-checked {
+            background-color: var(--actived-text-color);
+        }
     }
 }

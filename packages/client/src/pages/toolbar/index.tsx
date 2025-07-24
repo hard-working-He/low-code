@@ -3,7 +3,7 @@ import { Button, Switch, Input, Modal, Upload } from 'antd';
 import { UndoOutlined, RedoOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import './index.scss';
-import { useEditorStore, useSnapShotStore, useLayerStore, useComposeStore } from '@/stores';
+import { useEditorStore, useSnapShotStore, useLayerStore, useComposeStore, useAppStore } from '@/stores';
 import type { Component } from '@/stores/useEditorStore';
 import toast from '@/utils/toast'
 import { exportJsonFile } from '@/utils/fileUtils';
@@ -29,6 +29,10 @@ const Toolbar: React.FC = () => {
   const snapshotIndex = useSnapShotStore((state) => state.snapshotIndex);
   const snapshots = useSnapShotStore((state) => state.snapshots);
   
+  // 从应用状态获取暗黑模式设置
+  const isDarkMode = useAppStore((state) => state.isDarkMode);
+  const toggleDarkMode = useAppStore((state) => state.toggleDarkMode);
+  
   // 输出快照状态信息，用于调试
   useEffect(() => {
     console.log('快照状态:', {
@@ -39,7 +43,6 @@ const Toolbar: React.FC = () => {
   }, [snapshotIndex, snapshots]);
   
   // State variables
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isShowPreview, setIsShowPreview] = useState(false);
   const [isScreenshot] = useState(false);
   const [isShowAceEditor, setIsShowAceEditor] = useState(false);
@@ -52,6 +55,15 @@ const Toolbar: React.FC = () => {
   const [psdLoading, setPsdLoading] = useState(false);
   // 获取选区数据
   const areaData = useComposeStore((state) => state.areaData);
+  
+  // 初始化时应用暗黑模式状态
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+  }, []);
   
   // Watch for component data changes and log them
   useEffect(() => {
@@ -380,9 +392,9 @@ const Toolbar: React.FC = () => {
     console.log('画布比例已更改为:', e.target.value + '%', '(缩放功能已禁用)');
   }; */
 
-  const handleToggleDarkMode = (checked: boolean) => {
-    setIsDarkMode(checked);
-    // TODO: Implement dark mode toggle functionality
+  // 处理暗黑模式切换
+  const handleToggleDarkMode = () => {
+    toggleDarkMode();
   };
 
   const beforeUpload = (file: File) => {
@@ -410,12 +422,12 @@ const Toolbar: React.FC = () => {
       exportJsonFile(jsonData, `low-code-export-${new Date().getTime()}.json`);
       toast('导出成功');
     } else if (jsonData) {
-              try {
-          const importData = JSON.parse(jsonData);
+      try {
+        const importData = JSON.parse(jsonData);
           // 使用setComponentData函数更新组件数据，它会自动记录快照
           useEditorStore.getState().setComponentData(importData);
           toast('导入成功');
-        } catch (error) {
+      } catch (error) {
         console.error('JSON 解析错误:', error);
         toast('JSON 格式错误，请检查后重试');
         return;
@@ -484,7 +496,7 @@ const Toolbar: React.FC = () => {
   const canRedo = snapshotIndex < snapshots.length - 1;
   
   return (
-    <div className='toolbar-container'>
+    <div className={`toolbar-container ${isDarkMode ? 'dark' : ''}`}>
       <div className={isDarkMode ? 'dark toolbar' : 'toolbar'}>
         <Button onClick={onAceEditorChange}>JSON</Button>
         <Button onClick={onImportJSON}>导入</Button>

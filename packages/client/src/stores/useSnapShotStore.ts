@@ -107,28 +107,28 @@ function applyDiff(componentData: Component[], diff: DiffOperation): Component[]
           const newValue = newValues[i];
           
           // 处理嵌套属性路径 (例如 'style.width')
-          if (key.includes('.')) {
-            const [objKey, propKey] = key.split('.');
+        if (key.includes('.')) {
+          const [objKey, propKey] = key.split('.');
             // 更新组件的嵌套属性
             component = {
-              ...component,
-              [objKey]: {
-                ...(component as any)[objKey],
-                [propKey]: newValue
-              }
-            };
-          } else {
+            ...component,
+            [objKey]: {
+              ...(component as any)[objKey],
+              [propKey]: newValue
+            }
+          };
+        } else {
             // 直接更新顶层属性
             component = {
-              ...component,
-              [key]: newValue
-            };
-          }
+            ...component,
+            [key]: newValue
+          };
+        }
         }
         
         // 将修改后的组件放回结果数组
         result[componentIndex] = component;
-        
+
         // 更新组件映射
         componentMap.set(diff.componentId, deepCopy(result[componentIndex]));
       }
@@ -178,22 +178,22 @@ function revertDiff(componentData: Component[], diff: DiffOperation): Component[
           const oldValue = oldValues[i];
           
           // 处理嵌套属性路径 (例如 'style.width')
-          if (key.includes('.')) {
-            const [objKey, propKey] = key.split('.');
+        if (key.includes('.')) {
+          const [objKey, propKey] = key.split('.');
             // 更新组件的嵌套属性为旧值
             component = {
-              ...component,
-              [objKey]: {
-                ...(component as any)[objKey],
-                [propKey]: oldValue
-              }
-            };
-          } else {
+            ...component,
+            [objKey]: {
+              ...(component as any)[objKey],
+              [propKey]: oldValue
+            }
+          };
+        } else {
             // 直接更新顶层属性为旧值
             component = {
-              ...component,
-              [key]: oldValue
-            };
+            ...component,
+            [key]: oldValue
+          };
           }
         }
         
@@ -278,10 +278,10 @@ function generateDiffs(oldComponents: Component[], newComponents: Component[]): 
           
           // 只有在确实有类型修改操作时才记录差异，而不是拖拽时
           if (oldComponent.type !== newComponent.type) {
-            diffs.push({
-              componentId: newComponent.id,
-              type: DiffType.MODIFY,
-              data: {
+          diffs.push({
+            componentId: newComponent.id,
+            type: DiffType.MODIFY,
+            data: {
                 keys: [key],
                 oldValues: [deepCopy(oldValue)],
                 newValues: [deepCopy(newValue)]
@@ -307,9 +307,9 @@ function generateDiffs(oldComponents: Component[], newComponents: Component[]): 
                 keys: [key], // 使用数组形式
                 oldValues: [deepCopy(oldValue)], // 使用数组形式
                 newValues: [deepCopy(newValue)] // 使用数组形式
-              }
-            } as ModifyOperation);
-          }
+            }
+          } as ModifyOperation);
+        }
       }
       
       // 使用映射收集样式变更，为每个组件创建一个条目
@@ -364,15 +364,15 @@ function generateDiffs(oldComponents: Component[], newComponents: Component[]): 
         // 如果有样式变更，创建一个合并的diff操作
         if (changes.keys.length > 0) {
           // 无论多少变更都使用批量格式
-          diffs.push({
-            componentId: newComponent.id,
-            type: DiffType.MODIFY,
-            data: {
+            diffs.push({
+              componentId: newComponent.id,
+              type: DiffType.MODIFY,
+              data: {
               keys: changes.keys,
               oldValues: changes.oldValues,
               newValues: changes.newValues
-            }
-          } as ModifyOperation);
+              }
+            } as ModifyOperation);
         }
       }
     }

@@ -1,15 +1,18 @@
+/* 更新暗黑模式样式，支持全应用 */
+body.dark,
 .home.dark,
 .dark ~ .el-color-picker__panel,
-.dark ~ .el-select-dropdown {
+.dark ~ .el-select-dropdown,
+.dark .ant-modal-content {
     --main-bg-color: #2e2e2e;
-    --secondary-bg-color: #000;
+    --secondary-bg-color: #1a1a1a;
     --button-text-color: #fff;
-    --text-color: #fff;
+    --text-color: #d9d9d9;
     --border-color: #161616b8;
-    --placeholder-text-color: #fff;
+    --placeholder-text-color: #a0a0a0;
     --placeholder-bg-color: #242424;
-    --actived-text-color: #fff;
-    --actived-bg-color: #409eff;
+    --actived-text-color: #409eff;
+    --actived-bg-color: #1e1e1e;
     --ace-bg-color: #000;
     --disable-text-color: #c0c4cc;
     --disable-border-color: #4b4a4ad9;
@@ -48,6 +51,105 @@
         &::after {
             border-top-color: #1d1e1f;
             border-bottom-color: #1d1e1f;
+        }
+    }
+    
+    /* 编辑器组件样式 */
+    .editor-container {
+        background-color: #242424;
+        
+        .shape {
+            border-color: #555;
+            
+            &.active {
+                border-color: #409eff;
+            }
+        }
+    }
+    
+    /* 工具栏样式 */
+    .toolbar {
+        background-color: #1d1e1f;
+        border-bottom: 1px solid #000;
+        
+        .btn {
+            color: #d9d9d9;
+            background-color: #2d2d2d;
+            border-color: #555;
+            
+            &:hover {
+                background-color: #3a3a3a;
+            }
+            
+            &:disabled {
+                background-color: #252525;
+                color: #777;
+            }
+        }
+    }
+    
+    /* 左侧面板 */
+    .left-panel {
+        background-color: #1d1e1f;
+        border-right: 1px solid #000;
+        
+        .component-item {
+            border-color: #444;
+            background-color: #2d2d2d;
+            
+            &:hover {
+                background-color: #3a3a3a;
+            }
+        }
+    }
+    
+    /* 右侧面板 */
+    .right-panel {
+        background-color: #1d1e1f;
+        border-left: 1px solid #000;
+    }
+    
+    /* 画布样式 */
+    .draw-panel {
+        background-color: #333;
+        
+        .content {
+            background-color: #2c2c2c;
+            color: #d9d9d9;
+        }
+    }
+    
+    /* 表单控件 */
+    input, textarea, select {
+        background-color: #2d2d2d;
+        color: #d9d9d9;
+        border-color: #444;
+        
+        &:focus {
+            border-color: #409eff;
+        }
+        
+        &::placeholder {
+            color: #777;
+        }
+    }
+    
+    /* 按钮样式 */
+    button, .ant-btn {
+        background-color: #2d2d2d;
+        color: #d9d9d9;
+        border-color: #444;
+        
+        &:hover, &:focus {
+            background-color: #3a3a3a;
+            color: #409eff;
+            border-color: #409eff;
+        }
+        
+        &:disabled {
+            background-color: #252525;
+            color: #777;
+            border-color: #333;
         }
     }
 }

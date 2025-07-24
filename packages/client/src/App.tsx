@@ -3,6 +3,8 @@ import { message } from 'antd'
 // 导入样式
 import './App.css'
 import '@assets/iconfont/iconfont.css'
+import './styles/global.scss'
+import './styles/dark.scss'
 import { ToastContainer } from 'react-toastify';
 // Configure message global settings
 message.config({
@@ -22,12 +24,15 @@ import AttrList from '@/pages/AttrList'
 import { useDrop } from '@/hooks'
 import { useAppStore, useEditorStore, useLayerStore, useSnapShotStore } from '@/stores'
 import { componentMap } from '@/constants'
-import calculateRelativePosition  from '@/utils/computeXY'
+import calculateRelativePosition from '@/utils/computeXY'
 
 function App() {
   // 从应用状态管理器中获取画布样式数据和更新方法
   const canvasStyleData = useAppStore((state) => state.canvasStyleData);
   const updateCanvasStyleData = useAppStore((state) => state.updateCanvasStyleData);
+  
+  // 从应用状态获取暗黑模式设置
+  const isDarkMode = useAppStore((state) => state.isDarkMode);
   
   // 从LayerStore中获取当前选中的组件
   const curComponent = useLayerStore((state) => state.curComponent);
@@ -45,6 +50,15 @@ function App() {
   
   // 从快照存储获取记录快照的方法
   const recordSnapshot = useSnapShotStore((state) => state.recordSnapshot);
+  
+  // 初始化时应用暗黑模式
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+  }, [isDarkMode]);
   
   // 添加效果钩子确保页面加载后输出调试信息
   useEffect(() => {
@@ -146,7 +160,7 @@ function App() {
   });
 
   return (
-    <>
+    <div className={isDarkMode ? 'home dark' : 'home'}>
       <Toolbar />
       {/* 三栏布局：左侧面板、中间画布、右侧属性面板 */}
       <main className='app-container'>
@@ -186,7 +200,7 @@ function App() {
         </section>
       </main>
       <ToastContainer />
-    </>
+    </div>
   )
 }
 

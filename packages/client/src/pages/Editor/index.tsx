@@ -236,53 +236,44 @@ const Editor: React.FC = () => {
   }, [componentData, renderComponent]);
 
   return (
-    <div className="editor-container">
-      <div className="editor" id="editor" ref={editorRef}>
+    <div 
+      className="editor-container"
+      id="editor" 
+      ref={editorRef}
+      style={{ 
+        position: 'relative',
+        backgroundColor: canvasStyleData.backgroundColor, 
+        opacity: canvasStyleData.opacity,
+        color: canvasStyleData.color,
+        fontSize: canvasStyleData.fontSize,
+        width: '100%',
+        height: '100%'
+      }}
+      onClick={handleCanvasClick}
+      onMouseDown={handleMouseDown}
+    >
+      {/* 使用优化后的组件渲染列表 */}
+      {renderedComponents}
+      
+      {/* 渲染对齐线 - 只渲染一次 */}
+      <MarkLine />
+      
+      {/* 渲染选择区域 */}
+      {isShowArea && (
         <div 
-          className="draw-panel" 
-          style={{ 
-            position: 'relative',
-            backgroundColor: canvasStyleData.backgroundColor, 
-            opacity: canvasStyleData.opacity,
-            color: canvasStyleData.color,
-            fontSize: canvasStyleData.fontSize
+          className="select-area"
+          style={{
+            position: 'absolute',
+            border: '1px dashed #59c7f9',
+            backgroundColor: 'rgba(89, 199, 249, 0.1)',
+            left: `${areaData.style.left || start.x}px`,
+            top: `${areaData.style.top || start.y}px`,
+            width: `${areaData.style.width || width}px`,
+            height: `${areaData.style.height || height}px`,
+            zIndex: 9999,
           }}
-        >
-          <div 
-            className="content"
-            style={{
-              position: 'relative',
-              width: '100%',
-              height: '100%'
-            }}
-            onClick={handleCanvasClick}
-            onMouseDown={handleMouseDown}
-          >
-            {/* 使用优化后的组件渲染列表 */}
-            {renderedComponents}
-            
-            {/* 渲染对齐线 - 只渲染一次 */}
-            <MarkLine />
-            
-            {/* 渲染选择区域 */}
-            {isShowArea && (
-              <div 
-                className="select-area"
-                style={{
-                  position: 'absolute',
-                  border: '1px dashed #59c7f9',
-                  backgroundColor: 'rgba(89, 199, 249, 0.1)',
-                  left: `${areaData.style.left || start.x}px`,
-                  top: `${areaData.style.top || start.y}px`,
-                  width: `${areaData.style.width || width}px`,
-                  height: `${areaData.style.height || height}px`,
-                  zIndex: 9999,
-                }}
-              />
-            )}
-          </div>
-        </div>
-      </div>
+        />
+      )}
     </div>
   );
 };
