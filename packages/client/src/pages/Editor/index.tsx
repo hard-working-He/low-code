@@ -8,6 +8,7 @@ import LPicture from '@/components/LPicture';
 import LGroup from '@/components/LGroup';
 import Shape from './Shape';
 import MarkLine from './MarkLine';
+import { throttle } from '@/utils/throttle';
 import './index.scss';
 
 // 组件映射表 - 移到组件外部避免重新创建
@@ -48,6 +49,78 @@ const Editor: React.FC = () => {
   
   // 使用ref跟踪初始化状态，防止StrictMode下重复初始化
   const hasInitialized = useRef(false);
+  
+  // 使用ref来存储拖拽状态，避免闭包问题
+  const dragState = useRef({
+    startX: 0,
+    startY: 0,
+    initialClientX: 0,
+    initialClientY: 0,
+    editorX: 0,
+    editorY: 0,
+  });
+  
+  // 使用ref存储事件处理函数，避免重复创建
+  const eventHandlers = useRef({
+    handleMouseMove: null as ((e: MouseEvent) => void) | null,
+    handleMouseUp: null as (() => void) | null,
+  });
+  
+  // 清理所有事件监听器
+  const cleanupEventListeners = useCallback(() => {
+    if (eventHandlers.current.handleMouseMove) {
+      document.removeEventListener('mousemove', eventHandlers.current.handleMouseMove);
+      eventHandlers.current.handleMouseMove = null;
+    }
+    if (eventHandlers.current.handleMouseUp) {
+      document.removeEventListener('mouseup', eventHandlers.current.handleMouseUp);
+      eventHandlers.current.handleMouseUp = null;
+    }
+  }, []);
+
+  // 组件卸载时清理事件监听器
+  useEffect(() => {
+    return () => {
+      cleanupEventListeners();
+    };
+  }, [cleanupEventListeners]);
+  
+  // 使用throttle优化鼠标移动处理函数
+  const handleMouseMove = useCallback(
+    throttle((moveEvent: MouseEvent) => {
+      const state = dragState.current;
+      let newWidth = Math.abs(moveEvent.clientX - state.initialClientX);
+      let newHeight = Math.abs(moveEvent.clientY - state.initialClientY);
+      
+      let newStartX = state.startX;
+      let newStartY = state.startY;
+      
+      // 处理向左上方拖动的情况
+      if (moveEvent.clientX < state.initialClientX) {
+        newStartX = moveEvent.clientX - state.editorX;
+      }
+      
+      if (moveEvent.clientY < state.initialClientY) {
+        newStartY = moveEvent.clientY - state.editorY;
+      }
+      
+      // 批量更新状态，减少重渲染
+      requestAnimationFrame(() => {
+        setStart(newStartX, newStartY);
+        setAreaSize(newWidth, newHeight);
+        useComposeStore.getState().setAreaData({
+          style: {
+            left: newStartX,
+            top: newStartY,
+            width: newWidth,
+            height: newHeight
+          },
+          components: []
+        });
+      });
+    }, 16), // 约60fps的频率
+    [setStart, setAreaSize]
+  );
   
   // 初始化快照 - 添加正确的依赖项
   useEffect(() => {
@@ -123,56 +196,31 @@ const Editor: React.FC = () => {
     // 如果点击的不是画布本身，则不处理
     if (e.target !== e.currentTarget) return;
     
+    // 清理之前可能存在的事件监听器
+    cleanupEventListeners();
+    
     // 获取编辑器的位移信息
     const rectInfo = editorRef.current?.getBoundingClientRect();
     if (!rectInfo) return;
     
-    const editorX = rectInfo.x;
-    const editorY = rectInfo.y;
-    
-    // 记录起点坐标
-    const startX = e.clientX - editorX;
-    const startY = e.clientY - editorY;
-    setStart(startX, startY);
+    // 存储初始状态到ref中
+    dragState.current = {
+      startX: e.clientX - rectInfo.x,
+      startY: e.clientY - rectInfo.y,
+      initialClientX: e.clientX,
+      initialClientY: e.clientY,
+      editorX: rectInfo.x,
+      editorY: rectInfo.y,
+    };
     
     // 显示选择区域
     setShowArea(true);
     setAreaSize(0, 0);
-    
-    // 监听鼠标移动和抬起事件
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      let newWidth = Math.abs(moveEvent.clientX - e.clientX);
-      let newHeight = Math.abs(moveEvent.clientY - e.clientY);
-      
-      let newStartX = startX;
-      let newStartY = startY;
-      
-      // 处理向左上方拖动的情况
-      if (moveEvent.clientX < e.clientX) {
-        newStartX = moveEvent.clientX - editorX;
-      }
-      
-      if (moveEvent.clientY < e.clientY) {
-        newStartY = moveEvent.clientY - editorY;
-      }
-      
-      // 更新起点和区域大小
-      setStart(newStartX, newStartY);
-      setAreaSize(newWidth, newHeight);
-      
-      // 同时更新areaData以实时显示拖拽区域
-      useComposeStore.getState().setAreaData({
-        style: {
-          left: newStartX,
-          top: newStartY,
-          width: newWidth,
-          height: newHeight
-        },
-        components: []
-      });
-    };
+    setStart(dragState.current.startX, dragState.current.startY);
     
     const handleMouseUp = () => {
+      cleanupEventListeners();
+      
       // 创建组合区域
       createGroup();
       
@@ -182,16 +230,15 @@ const Editor: React.FC = () => {
         // 如果没有组件在选区内，则隐藏选区
         useComposeStore.getState().hideArea();
       }
-      
-      // 移除事件监听
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
     };
     
-    // 添加事件监听
+    eventHandlers.current.handleMouseMove = handleMouseMove;
+    eventHandlers.current.handleMouseUp = handleMouseUp;
+    
+    // 添加新的事件监听
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [setStart, setShowArea, setAreaSize, createGroup]);
+  }, [setShowArea, setAreaSize, setStart, createGroup, handleMouseMove, cleanupEventListeners]);
   
   // 渲染每个组件
   const renderComponent = useCallback((component: Component, index: number) => {

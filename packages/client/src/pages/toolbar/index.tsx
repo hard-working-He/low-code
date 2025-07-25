@@ -487,8 +487,16 @@ const Toolbar: React.FC = () => {
     <div className={`toolbar-container ${isDarkMode ? 'dark' : ''}`}>
       <div className={isDarkMode ? 'dark toolbar' : 'toolbar'}>
         {/* <Button onClick={onAceEditorChange}>JSON</Button> */}
+        <Button 
+          onClick={() => {
+            window.open('https://juejin.cn/post/7530558924166905866', '_blank');
+          }}
+          type="primary"
+          style={{ background: 'linear-gradient(272.66deg, #88eded -11.39%, #4ae6cc4d 28.55%, #a0ed9540 92.84%, #c8f398 115.07%), radial-gradient(37.34% 122.3% at 91.54% 146.99%, #4fa7ff80 0, #4fa7ff00 100%), radial-gradient(34.22% 57.56% at 39.34% -26.67%, #6de9b680 0, #6de9b600 100%), linear-gradient(0deg, #fff, #fff)', color: 'black' }}
+        >开发文档</Button>
         <Button onClick={onImportJSON}>导入</Button>
         <Button onClick={onExportJSON}>导出</Button>
+        
         <Button 
           onClick={handleUndo} 
           icon={<UndoOutlined />}
