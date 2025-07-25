@@ -7,7 +7,7 @@ import LButton from '@/components/LButton';
 import LPicture from '@/components/LPicture';
 import LGroup from '@/components/LGroup';
 import Shape from './Shape';
-import MarkLine from './MarkLine';
+//import MarkLine from './MarkLine';
 import { throttle } from '@/utils/throttle';
 import './index.scss';
 
@@ -303,7 +303,7 @@ const Editor: React.FC = () => {
       {renderedComponents}
       
       {/* 渲染对齐线 - 只渲染一次 */}
-      <MarkLine />
+      {/* <MarkLine /> */}
       
       {/* 渲染选择区域 */}
       {isShowArea && (
