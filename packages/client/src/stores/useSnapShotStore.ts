@@ -1,97 +1,64 @@
 import { create } from 'zustand';
 import type { Component } from './useEditorStore';
+import { DiffType } from './useSnapShotStore.types';
+import type {
+  AddOperation,
+  DeleteOperation,
+  ModifyOperation,
+  DiffOperation,
+  SnapShotState,
+  SnapShotActions
+} from './useSnapShotStore.types';
 import { useEditorStore } from './useEditorStore';
 import { deepCopy } from '@/utils/utils';
 
-// Operation types as string constants instead of enum
-export const DiffType = {
-  ADD: 'add',
-  DELETE: 'delete',
-  MODIFY: 'modify'
-} as const;
-
-export type DiffTypeValue = typeof DiffType[keyof typeof DiffType];
-
-// Base interface for all diff operations
-interface BaseDiffOperation {
-  componentId: string;
-  type: DiffTypeValue;
-}
-
-// Interface for adding a component
-interface AddOperation extends BaseDiffOperation {
-  type: typeof DiffType.ADD;
-  data: Component; // Full component data
-  index: number; // Position in the array
-}
-
-// Interface for deleting a component
-interface DeleteOperation extends BaseDiffOperation {
-  type: typeof DiffType.DELETE;
-  index: number; // Original position for restore
-  data: Component; // Saved component for undo
-}
-
-// Interface for modifying a component
-interface ModifyOperation extends BaseDiffOperation {
-  type: typeof DiffType.MODIFY;
-  data: {
-    // 完全移除单值字段
-    // key: string; // Property path (e.g. 'style.width' or 'propValue')
-    // oldValue: any; // Previous value
-    // newValue: any; // New value
-    // 只使用多值字段
-    keys: string[]; // 多个属性路径
-    oldValues: any[]; // 多个旧值
-    newValues: any[]; // 多个新值
-  };
-}
-
-// Union type for all operations
-export type DiffOperation = AddOperation | DeleteOperation | ModifyOperation;
-
-// Default component data storage
+// 所有差异操作的基础接口
+// 添加组件的操作接口
+// 删除组件的操作接口
+// 修改组件的操作接口
+// 所有操作的联合类型
+// 默认组件数据存储
 let defaultComponentData: Component[] = [];
-// Component ID to Component mapping for efficient lookups
+// 组件ID到组件的映射，便于高效查找
 let componentMap = new Map<string, Component>();
 
-// Helper function to get a copy of default component data
+// 获取默认组件数据的副本
 function getDefaultComponentData(): Component[] {
   return JSON.parse(JSON.stringify(defaultComponentData));
 }
 
-// Function to set default component data and initialize component map
+// 设置默认组件数据并初始化组件映射
 export function setDefaultComponentData(data: Component[] = []): void {
   defaultComponentData = data;
   
-  // Initialize component map
+  // 初始化组件映射
   componentMap.clear();
   data.forEach(component => {
     componentMap.set(component.id, deepCopy(component));
   });
 }
 
-// Helper function to apply a diff operation
+// 应用差异操作的辅助函数
 function applyDiff(componentData: Component[], diff: DiffOperation): Component[] {
   const result = [...componentData];
 
   switch (diff.type) {
     case DiffType.ADD:
-      // Add component at specific index
+      // 在指定索引添加组件
       result.splice((diff as AddOperation).index, 0, deepCopy((diff as AddOperation).data));
-      // Update component map
+      // 更新组件映射
       componentMap.set(diff.componentId, deepCopy((diff as AddOperation).data));
       break;
     
     case DiffType.DELETE:
-      // Remove component at index
+      // 在索引处移除组件
       result.splice((diff as DeleteOperation).index, 1);
-      // Remove from component map
+      // 从组件映射中移除
       componentMap.delete(diff.componentId);
       break;
     
     case DiffType.MODIFY:
-      // Find component to modify
+      // 查找要修改的组件
       const modifyOp = diff as ModifyOperation;
       const componentIndex = result.findIndex(comp => comp.id === diff.componentId);
       
@@ -138,31 +105,31 @@ function applyDiff(componentData: Component[], diff: DiffOperation): Component[]
   return result;
 }
 
-// Helper function to revert a diff operation
+// 撤销差异操作的辅助函数
 function revertDiff(componentData: Component[], diff: DiffOperation): Component[] {
   const result = [...componentData];
 
   switch (diff.type) {
     case DiffType.ADD:
-      // For add, reverting means deleting
+      // 对于添加，撤销即为删除
       const addIndex = result.findIndex(comp => comp.id === diff.componentId);
       if (addIndex !== -1) {
         result.splice(addIndex, 1);
-        // Remove from component map
+        // 从组件映射中移除
         componentMap.delete(diff.componentId);
       }
       break;
     
     case DiffType.DELETE:
-      // For delete, reverting means adding back at the original index
+      // 对于删除，撤销即为在原始索引处添加回来
       const deleteOp = diff as DeleteOperation;
       result.splice(deleteOp.index, 0, deepCopy(deleteOp.data));
-      // Update component map
+      // 更新组件映射
       componentMap.set(diff.componentId, deepCopy(deleteOp.data));
       break;
     
     case DiffType.MODIFY:
-      // For modify, reverting means setting back the old value
+      // 对于修改，撤销即为还原旧值
       const modifyOp = diff as ModifyOperation;
       const componentIndex = result.findIndex(comp => comp.id === diff.componentId);
       
@@ -200,7 +167,7 @@ function revertDiff(componentData: Component[], diff: DiffOperation): Component[
         // 将修改后的组件放回结果数组
         result[componentIndex] = component;
 
-        // Update component map
+        // 更新组件映射
         componentMap.set(diff.componentId, deepCopy(result[componentIndex]));
       }
       break;
@@ -209,23 +176,23 @@ function revertDiff(componentData: Component[], diff: DiffOperation): Component[
   return result;
 }
 
-// Function to compare components and generate diff operations
+// 比较组件并生成差异操作
 function generateDiffs(oldComponents: Component[], newComponents: Component[]): DiffOperation[] {
   const diffs: DiffOperation[] = [];
   
-  // Map old components by id for easier lookup
+  // 通过id将旧组件映射，便于查找
   const oldComponentsMap = new Map<string, { component: Component, index: number }>();
   oldComponents.forEach((component, index) => {
     oldComponentsMap.set(component.id, { component: deepCopy(component), index });
   });
   
-  // Map new components by id for easier lookup
+  // 通过id将新组件映射，便于查找
   const newComponentsMap = new Map<string, { component: Component, index: number }>();
   newComponents.forEach((component, index) => {
     newComponentsMap.set(component.id, { component: deepCopy(component), index });
   });
   
-  // Find deleted components (in old but not in new)
+  // 查找被删除的组件（在旧组件中但不在新组件中）
   oldComponents.forEach((component, index) => {
     if (!newComponentsMap.has(component.id)) {
       diffs.push({
@@ -237,7 +204,7 @@ function generateDiffs(oldComponents: Component[], newComponents: Component[]): 
     }
   });
   
-  // Find added components (in new but not in old)
+  // 查找被添加的组件（在新组件中但不在旧组件中）
   newComponents.forEach((component, index) => {
     if (!oldComponentsMap.has(component.id)) {
       diffs.push({
@@ -249,7 +216,7 @@ function generateDiffs(oldComponents: Component[], newComponents: Component[]): 
     }
   });
   
-  // Find modified components
+  // 查找被修改的组件
   newComponents.forEach((newComponent) => {
     const oldEntry = oldComponentsMap.get(newComponent.id);
     if (oldEntry) {
@@ -258,15 +225,15 @@ function generateDiffs(oldComponents: Component[], newComponents: Component[]): 
       // 为了调试，记录比较的组件
       console.log(`Comparing component ${newComponent.id} of type ${newComponent.type}`);
       
-      // Compare properties excluding 'id'
-      // First, check for top-level property changes
+      // 比较除'id'外的属性
+      // 首先检查顶层属性的变化
       const topLevelKeys = new Set([
         ...Object.keys(oldComponent),
         ...Object.keys(newComponent)
       ].filter(key => key !== 'id'));
       
       for (const key of topLevelKeys) {
-        // Skip style object for now - we'll handle it separately
+        // 跳过style对象，后面单独处理
         if (key === 'style') continue;
         
         const oldValue = (oldComponent as any)[key];
@@ -319,7 +286,7 @@ function generateDiffs(oldComponents: Component[], newComponents: Component[]): 
         newValues: any[] 
       }>();
       
-      // Check for style property changes
+      // 检查style属性的变化
       if (oldComponent.style && newComponent.style) {
         const styleKeys = new Set([
           ...Object.keys(oldComponent.style),
@@ -382,24 +349,10 @@ function generateDiffs(oldComponents: Component[], newComponents: Component[]): 
   return diffs;
 }
 
-// Types for the snapshot store
-interface SnapShotState {
-  snapshots: DiffOperation[][]; // Array of arrays of diff operations
-  snapshotIndex: number;
-  isRecording: boolean;
-  // 向后兼容旧代码中的snapshotData属性
-  get snapshotData(): DiffOperation[][];
-}
-
-interface SnapShotActions {
-  undo: () => void;
-  redo: () => void;
-  recordSnapshot: () => void;
-}
-
-// Create the snapshot store
+// 快照存储的类型
+// 创建快照存储
 const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => ({
-  // State
+  // 状态
   snapshots: [],
   snapshotIndex: -1,
   isRecording: false,
@@ -408,23 +361,23 @@ const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => (
     return get().snapshots;
   },
 
-  // Actions
+  // 操作
   undo: () => {
     set((state) => {
       if (state.snapshotIndex >= 0) {
-        // Get the current snapshot to revert
+        // 获取当前要撤销的快照
         const currentSnapshot = state.snapshots[state.snapshotIndex];
         const newIndex = state.snapshotIndex - 1;
         
-        // Get current component data
+        // 获取当前组件数据
         let componentData = useEditorStore.getState().componentData;
         
-        // Apply the reverse of all operations in the current snapshot
+        // 逆序应用当前快照中的所有操作
         for (let i = currentSnapshot.length - 1; i >= 0; i--) {
           componentData = revertDiff(componentData, currentSnapshot[i]);
         }
         
-        // Update editor store
+        // 更新编辑器存储
         useEditorStore.setState({ componentData });
         
         console.log('Undo: Reverted to snapshot', newIndex);
@@ -444,15 +397,15 @@ const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => (
         const newIndex = state.snapshotIndex + 1;
         const snapshotToApply = state.snapshots[newIndex];
         
-        // Get current component data
+        // 获取当前组件数据
         let componentData = useEditorStore.getState().componentData;
         
-        // Apply all operations in the next snapshot
+        // 应用下一个快照中的所有操作
         for (const operation of snapshotToApply) {
           componentData = applyDiff(componentData, operation);
         }
         
-        // Update editor store
+        // 更新编辑器存储
         useEditorStore.setState({ componentData });
         
         console.log('Redo: Applied snapshot', newIndex);
@@ -468,18 +421,18 @@ const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => (
   
   recordSnapshot: () => {
     set((state) => {
-      // Prevent recursive calls
+      // 防止递归调用
       if (state.isRecording) {
         return state;
       }
       
-      // Get current component data
+      // 获取当前组件数据
       const currentComponents = useEditorStore.getState().componentData;
       
       // 记录当前所有组件的ID和类型，方便调试
       console.log('Current components:', currentComponents.map(c => ({ id: c.id, type: c.type })));
       
-      // If this is the first snapshot, initialize the component map
+      // 如果是第一次快照，初始化组件映射
       if (state.snapshotIndex === -1 && state.snapshots.length === 0) {
         componentMap.clear();
         currentComponents.forEach(component => {
@@ -488,14 +441,15 @@ const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => (
       }
       
       try {
-        // Set recording flag
+        // 设置录制标志
         state.isRecording = true;
         
-        // Get previous components (either from the last snapshot or default)
+        // 获取前一个组件数据（从上一个快照或默认数据）
         let previousComponents: Component[];
         if (state.snapshotIndex >= 0) {
-          // We need to reconstruct the previous state by applying all diffs up to the current index
+          // 需要通过应用所有diff重建到当前索引的前一个状态
           previousComponents = [...getDefaultComponentData()];
+          console.log('Previous components:', previousComponents);
           for (let i = 0; i <= state.snapshotIndex; i++) {
             for (const operation of state.snapshots[i]) {
               previousComponents = applyDiff(previousComponents, operation);
@@ -503,12 +457,13 @@ const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => (
           }
         } else {
           previousComponents = getDefaultComponentData();
+          console.log('Previous components:', previousComponents);
         }
         
         // 记录重建的上一状态中的组件ID和类型，方便调试
         console.log('Previous components:', previousComponents.map(c => ({ id: c.id, type: c.type })));
         
-        // Generate diffs between previous and current state
+        // 生成前后状态的差异
         const diffs = generateDiffs(previousComponents, currentComponents);
         
         // 过滤掉可能的错误修改，如拖拽时不应该有类型变化
@@ -526,7 +481,7 @@ const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => (
           return true;
         });
         
-        // If there are no diffs, don't create a new snapshot
+        // 如果没有差异，不创建新快照
         if (filteredDiffs.length === 0) {
           console.log('No changes detected, not creating snapshot');
           return { ...state, isRecording: false };
@@ -534,15 +489,15 @@ const useSnapShotStore = create<SnapShotState & SnapShotActions>((set, get) => (
         
         console.log('Recording snapshot with filtered diffs:', filteredDiffs);
         
-        // Create updated snapshots array
+        // 创建更新后的快照数组
         const newIndex = state.snapshotIndex + 1;
         let newSnapshots;
         
         if (newIndex > 0 && newIndex < state.snapshots.length) {
-          // Truncate snapshots after current index
+          // 截断当前索引之后的快照
           newSnapshots = [...state.snapshots.slice(0, newIndex), filteredDiffs];
         } else {
-          // Add new snapshot at the end
+          // 在末尾添加新快照
           newSnapshots = [...state.snapshots, filteredDiffs];
         }
         

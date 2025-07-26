@@ -1,13 +1,15 @@
 .toolbar-container {
+    width: 100vw;
     .toolbar {
+        display: flex;
         padding: 15px 10px;
-        white-space: nowrap;
-        overflow-x: auto;
         background: var(--main-bg-color);
         border-bottom: 1px solid var(--border-color);
 
         /* Add styles for buttons */
         .ant-btn {
+            flex: 1;
+            min-width: 40px;
             margin: 0 4px;
             background: var(--main-bg-color);
             border: 1px solid var(--toolbar-border-color);
@@ -30,18 +32,6 @@
             }
         }
 
-        /* Media queries for responsive button margins */
-        @media (min-width: 768px) {
-            .ant-btn {
-                margin: 0 8px;
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .ant-btn {
-                margin: 0 12px;
-            }
-        }
         
         .mode-toggle-text {
             color: var(--text-color);

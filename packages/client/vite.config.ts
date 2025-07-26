@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
-import { visualizer } from 'rollup-plugin-visualizer'
+import { VitePWA } from 'vite-plugin-pwa'
 
 
 const __filename = fileURLToPath(import.meta.url)
@@ -11,7 +11,18 @@ const __dirname = dirname(__filename)
 export default defineConfig({
   plugins: [
     react(),
-    visualizer({ open: true }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      manifest: {
+        name: 'Low Code App',
+        short_name: 'LowCode',
+        start_url: '.',
+        display: 'standalone',
+        background_color: '#ffffff',
+        description: 'A low-code platform with PWA support',
+        icons: []
+      }
+    }),
   ],
   resolve: {
     alias: {
