@@ -10,6 +10,7 @@ interface LTextProps {
 
 const LText: React.FC<LTextProps> = ({ propValue, element, onInput, editMode = 'edit' }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const safeValue = typeof propValue === 'string' ? propValue : '';
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     //console.log(e.target.value);
@@ -28,7 +29,7 @@ const LText: React.FC<LTextProps> = ({ propValue, element, onInput, editMode = '
         />
       ) : (
         <div className="text disabled">
-          {propValue.split('\n').map((text, index) => (
+          {safeValue.split('\n').map((text, index) => (
             <div key={index}>{text}</div>
           ))}
         </div>

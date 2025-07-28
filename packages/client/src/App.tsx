@@ -7,6 +7,7 @@ import './styles/global.scss'
 import './styles/dark.scss'
 import { ToastContainer } from 'react-toastify';
 // Configure message global settings
+//import { Counter } from '@components/Counter'
 message.config({
   top: 10000,
   duration: 1,
@@ -25,6 +26,7 @@ import { useDrop } from '@/hooks'
 import { useAppStore, useEditorStore, useLayerStore, useSnapShotStore } from '@/stores'
 import { componentMap } from '@/constants'
 import calculateRelativePosition from '@/utils/computeXY'
+import { getLCP, getFP, getFCP, getTTI } from './utils/utils'
 
 function App() {
   // 从应用状态管理器中获取画布样式数据和更新方法
@@ -82,6 +84,22 @@ function App() {
     return () => {
       document.removeEventListener('click', handleDocumentClick);
     };
+  }, []);
+
+  // 页面性能指标输出
+  useEffect(() => {
+    getLCP((lcp: number) => {
+      console.log('LCP 最大内容绘制:', lcp.toFixed(2), 'ms');
+    });
+    getFP((fp: number) => {
+      console.log('FP 首次绘制:', fp.toFixed(2), 'ms');
+    });
+    getFCP((fcp: number) => {
+      console.log('FCP 首次内容绘制:', fcp.toFixed(2), 'ms');
+    });
+    getTTI((tti: number) => {
+      console.log('TTI 首次可交互:', tti.toFixed(2), 'ms');
+    });
   }, []);
 
   //console.log('Current components:', componentData);
@@ -169,6 +187,7 @@ function App() {
 
   return (
     <div className={isDarkMode ? 'home dark' : 'home'}>
+     {/*  <Counter startTime={5} /> */}
       <Toolbar />
       {/* 三栏布局：左侧面板、中间画布、右侧属性面板 */}
       <main className='app-container'>

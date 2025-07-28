@@ -177,176 +177,168 @@ function revertDiff(componentData: Component[], diff: DiffOperation): Component[
 }
 
 // 比较组件并生成差异操作
-function generateDiffs(oldComponents: Component[], newComponents: Component[]): DiffOperation[] {
-  const diffs: DiffOperation[] = [];
-  
-  // 通过id将旧组件映射，便于查找
-  const oldComponentsMap = new Map<string, { component: Component, index: number }>();
-  oldComponents.forEach((component, index) => {
-    oldComponentsMap.set(component.id, { component: deepCopy(component), index });
-  });
-  
-  // 通过id将新组件映射，便于查找
-  const newComponentsMap = new Map<string, { component: Component, index: number }>();
-  newComponents.forEach((component, index) => {
-    newComponentsMap.set(component.id, { component: deepCopy(component), index });
-  });
-  
-  // 查找被删除的组件（在旧组件中但不在新组件中）
-  oldComponents.forEach((component, index) => {
-    if (!newComponentsMap.has(component.id)) {
-      diffs.push({
-        componentId: component.id,
-        type: DiffType.DELETE,
-        index,
-        data: deepCopy(component)
-      } as DeleteOperation);
+function generateDiffs(oldList: Component[], newList: Component[]): DiffOperation[] {
+  let diffs: DiffOperation[] = [];
+  let oldIndex = 0, newIndex = 0;
+
+  // 1. 头尾同步扫描
+  while (oldIndex < oldList.length && newIndex < newList.length) {
+    if (oldList[oldIndex].id === newList[newIndex].id && oldList[oldIndex].type === newList[newIndex].type) {
+      // diff 属性
+      diffs.push(...diffProps(oldList[oldIndex], newList[newIndex]));
+      oldIndex++;
+      newIndex++;
+    } else {
+      break;
+    }
+  }
+
+  // 2. 处理剩余节点
+  const oldRemain = oldList.slice(oldIndex);
+  const newRemain = newList.slice(newIndex);
+
+  // 2.1 oldRemain 里有但 newRemain 没有的，删除
+  const newRemainIds = new Set(newRemain.map(c => c.id));
+  for (const oldNode of oldRemain) {
+    if (!newRemainIds.has(oldNode.id)) {
+      diffs.push(markForDelete(oldNode));
+    }
+  }
+
+  // 2.2 newRemain 里有但 oldRemain 没有的，新增
+  const oldRemainIds = new Set(oldRemain.map(c => c.id));
+  for (const newNode of newRemain) {
+    if (!oldRemainIds.has(newNode.id)) {
+      diffs.push(markForAdd(newNode));
+    }
+  }
+
+  // 3. 移动优化
+  // 找出 newRemain 里复用的节点在 oldRemain 的索引序列
+  const oldIdToIndex = new Map<string, number>();
+  oldRemain.forEach((node, idx) => oldIdToIndex.set(node.id, idx));
+  const reusedOldIndexes: number[] = [];
+  newRemain.forEach(node => {
+    if (oldIdToIndex.has(node.id)) {
+      reusedOldIndexes.push(oldIdToIndex.get(node.id)!);
     }
   });
-  
-  // 查找被添加的组件（在新组件中但不在旧组件中）
-  newComponents.forEach((component, index) => {
-    if (!oldComponentsMap.has(component.id)) {
-      diffs.push({
-        componentId: component.id,
-        type: DiffType.ADD,
-        index,
-        data: deepCopy(component)
-      } as AddOperation);
-    }
-  });
-  
-  // 查找被修改的组件
-  newComponents.forEach((newComponent) => {
-    const oldEntry = oldComponentsMap.get(newComponent.id);
-    if (oldEntry) {
-      const oldComponent = oldEntry.component;
-      
-      // 为了调试，记录比较的组件
-      console.log(`Comparing component ${newComponent.id} of type ${newComponent.type}`);
-      
-      // 比较除'id'外的属性
-      // 首先检查顶层属性的变化
-      const topLevelKeys = new Set([
-        ...Object.keys(oldComponent),
-        ...Object.keys(newComponent)
-      ].filter(key => key !== 'id'));
-      
-      for (const key of topLevelKeys) {
-        // 跳过style对象，后面单独处理
-        if (key === 'style') continue;
-        
-        const oldValue = (oldComponent as any)[key];
-        const newValue = (newComponent as any)[key];
-        
-        // 特殊处理type属性，确保在拖拽操作中不会意外修改
-        if (key === 'type' && oldValue !== newValue) {
-          console.warn(`Type change detected for component ${newComponent.id}: ${oldValue} -> ${newValue}`);
-          
-          // 只有在确实有类型修改操作时才记录差异，而不是拖拽时
-          if (oldComponent.type !== newComponent.type) {
-          diffs.push({
-            componentId: newComponent.id,
-            type: DiffType.MODIFY,
-            data: {
-                keys: [key],
-                oldValues: [deepCopy(oldValue)],
-                newValues: [deepCopy(newValue)]
-              }
-            } as ModifyOperation);
-          }
-          continue; // 跳过后续处理
-        }
-        
-        // 使用更严格的比较方式，避免误报
-        const oldValueStr = JSON.stringify(oldValue);
-        const newValueStr = JSON.stringify(newValue);
-        
-        // 找到单个属性修改的diff创建部分
-          if (oldValueStr !== newValueStr) {
-            console.log(`Detected change in ${key} for component ${newComponent.id}:`, 
-                       { old: oldValue, new: newValue });
-            
-            diffs.push({
-              componentId: newComponent.id,
-              type: DiffType.MODIFY,
-              data: {
-                keys: [key], // 使用数组形式
-                oldValues: [deepCopy(oldValue)], // 使用数组形式
-                newValues: [deepCopy(newValue)] // 使用数组形式
-            }
-          } as ModifyOperation);
-        }
-      }
-      
-      // 使用映射收集样式变更，为每个组件创建一个条目
-      const styleChangesMap = new Map<string, { 
-        keys: string[], 
-        oldValues: any[], 
-        newValues: any[] 
-      }>();
-      
-      // 检查style属性的变化
-      if (oldComponent.style && newComponent.style) {
-        const styleKeys = new Set([
-          ...Object.keys(oldComponent.style),
-          ...Object.keys(newComponent.style)
-        ]);
-        
-        // 初始化此组件的样式变更收集器
-        if (!styleChangesMap.has(newComponent.id)) {
-          styleChangesMap.set(newComponent.id, {
-            keys: [],
-            oldValues: [],
-            newValues: []
-          });
-        }
-        
-        // 获取此组件的变更收集器
-        const changes = styleChangesMap.get(newComponent.id)!;
-        
-        // 收集所有样式变更
-        for (const styleKey of styleKeys) {
-          const oldStyleValue = oldComponent.style[styleKey];
-          const newStyleValue = newComponent.style[styleKey];
-          
-          // 忽略小于0.1的数值变化，避免浮点数精度问题
-          if (typeof oldStyleValue === 'number' && typeof newStyleValue === 'number') {
-            if (Math.abs(oldStyleValue - newStyleValue) < 0.1) {
-              continue;
-            }
-          }
-          
-          if (JSON.stringify(oldStyleValue) !== JSON.stringify(newStyleValue)) {
-            console.log(`Detected style change in ${styleKey} for component ${newComponent.id}:`, 
-                       { old: oldStyleValue, new: newStyleValue });
-            
-            // 添加到样式变更集合中
-            changes.keys.push(`style.${styleKey}`);
-            changes.oldValues.push(deepCopy(oldStyleValue));
-            changes.newValues.push(deepCopy(newStyleValue));
-          }
-        }
-        
-        // 如果有样式变更，创建一个合并的diff操作
-        if (changes.keys.length > 0) {
-          // 无论多少变更都使用批量格式
-            diffs.push({
-              componentId: newComponent.id,
-              type: DiffType.MODIFY,
-              data: {
-              keys: changes.keys,
-              oldValues: changes.oldValues,
-              newValues: changes.newValues
-              }
-            } as ModifyOperation);
-        }
-      }
-    }
-  });
-  
-  console.log('Generated diffs:', diffs);
+  // 求 LIS
+  const lis = getLIS(reusedOldIndexes);
+  // 非 LIS 的节点需要移动
+  // ...生成 moveDiffs（可选，暂未实现）
+
   return diffs;
+}
+
+// 更细致的属性 diff
+function diffProps(oldNode: Component, newNode: Component): DiffOperation[] {
+  const diffs: DiffOperation[] = [];
+  const keys = new Set([
+    ...Object.keys(oldNode),
+    ...Object.keys(newNode)
+  ].filter(key => key !== 'id'));
+
+  const changedKeys: string[] = [];
+  const oldValues: any[] = [];
+  const newValues: any[] = [];
+
+  for (const key of keys) {
+    if (key === 'style') continue; // style 单独处理
+    const oldValue = (oldNode as any)[key];
+    const newValue = (newNode as any)[key];
+    if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+      changedKeys.push(key);
+      oldValues.push(deepCopy(oldValue));
+      newValues.push(deepCopy(newValue));
+    }
+  }
+
+  // style diff
+  if (oldNode.style && newNode.style) {
+    const styleKeys = new Set([
+      ...Object.keys(oldNode.style),
+      ...Object.keys(newNode.style)
+    ]);
+    for (const styleKey of styleKeys) {
+      const oldStyleValue = oldNode.style[styleKey];
+      const newStyleValue = newNode.style[styleKey];
+      if (typeof oldStyleValue === 'number' && typeof newStyleValue === 'number') {
+        if (Math.abs(oldStyleValue - newStyleValue) < 0.1) continue;
+      }
+      if (JSON.stringify(oldStyleValue) !== JSON.stringify(newStyleValue)) {
+        changedKeys.push(`style.${styleKey}`);
+        oldValues.push(deepCopy(oldStyleValue));
+        newValues.push(deepCopy(newStyleValue));
+      }
+    }
+  }
+
+  if (changedKeys.length > 0) {
+    diffs.push({
+      componentId: newNode.id,
+      type: DiffType.MODIFY,
+      data: {
+        keys: changedKeys,
+        oldValues,
+        newValues
+      }
+    } as ModifyOperation);
+  }
+  return diffs;
+}
+
+function markForDelete(node: Component): DiffOperation {
+  return {
+    componentId: node.id,
+    type: DiffType.DELETE,
+    index: -1, // 你可以传实际 index
+    data: deepCopy(node)
+  } as DeleteOperation;
+}
+
+function markForAdd(node: Component): DiffOperation {
+  return {
+    componentId: node.id,
+    type: DiffType.ADD,
+    index: -1, // 你可以传实际 index
+    data: deepCopy(node)
+  } as AddOperation;
+}
+
+// 最长递增子序列（LIS）算法
+function getLIS(arr: number[]): number[] {
+  const p = arr.slice();
+  const result: number[] = [];
+  let u: number, v: number;
+  if (arr.length === 0) return result;
+  result.push(0);
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] > arr[result[result.length - 1]]) {
+      p[i] = result[result.length - 1];
+      result.push(i);
+      continue;
+    }
+    u = 0;
+    v = result.length - 1;
+    while (u < v) {
+      const c = ((u + v) / 2) | 0;
+      if (arr[result[c]] < arr[i]) u = c + 1;
+      else v = c;
+    }
+    if (arr[i] < arr[result[u]]) {
+      if (u > 0) p[i] = result[u - 1];
+      result[u] = i;
+    }
+  }
+  u = result.length;
+  v = result[result.length - 1];
+  const lis: number[] = [];
+  while (u-- > 0) {
+    lis[u] = v;
+    v = p[v];
+  }
+  return lis.map(i => arr[i]);
 }
 
 // 快照存储的类型

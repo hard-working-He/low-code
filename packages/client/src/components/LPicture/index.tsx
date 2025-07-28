@@ -48,15 +48,30 @@ interface LPictureProps {
  * @param {LPictureProps} props - 组件属性
  * @returns {JSX.Element} - 渲染的组件
  */
+function safePropValue(raw: any): PropValue {
+  if (
+    typeof raw === 'object' &&
+    raw !== null &&
+    typeof raw.url === 'string' &&
+    raw.flip &&
+    typeof raw.flip === 'object' &&
+    typeof raw.flip.vertical === 'boolean' &&
+    typeof raw.flip.horizontal === 'boolean'
+  ) {
+    return raw;
+  }
+  // 兜底
+  return {
+    url: '',
+    flip: { vertical: false, horizontal: false }
+  };
+}
+
 const LPicture = ({ propValue, element }: LPictureProps) => {
-  let { url, flip } = propValue || { url: '', flip: { vertical: false, horizontal: false } };
+  const { url, flip } = safePropValue(propValue);
   // 使用默认的图片URL和本地图片作为替代，避免CORS问题
-  if (!url) {
-    url = '/src/assets/title.jpg'; // 使用本地资源作为默认图片
-  }
-  if (!flip) {
-    flip = { vertical: false, horizontal: false };
-  }
+  const safeUrl = url || '/src/assets/title.jpg';
+  const safeFlip = flip || { vertical: false, horizontal: false };
 
   // 画布 DOM 元素的引用
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -94,7 +109,7 @@ const LPicture = ({ propValue, element }: LPictureProps) => {
       const img = new Image();
       // 添加crossOrigin设置来处理CORS
       img.crossOrigin = "anonymous";
-      img.src = propValue.url;
+      img.src = safeUrl;
       // 存储在引用中以重用
       imgRef.current = img;
       // 等待图片加载完成后绘制
@@ -136,7 +151,7 @@ const LPicture = ({ propValue, element }: LPictureProps) => {
     if (!canvasRef.current || !ctxRef.current || !imgRef.current) return;
     
     // 从属性中获取翻转设置
-    const { vertical, horizontal } = propValue.flip;
+    const { vertical, horizontal } = safeFlip;
     const { width, height } = element.style;
     // 根据翻转设置计算缩放因子
     const hvalue = horizontal ? -1 : 1;
@@ -198,7 +213,7 @@ const LPicture = ({ propValue, element }: LPictureProps) => {
       mirrorFlip();
     }
     // 依赖项确保这在翻转设置变化时运行
-  }, [propValue.flip.vertical, propValue.flip.horizontal]);
+  }, [safeFlip.vertical, safeFlip.horizontal]);
 
   // 如果有错误，显示替代内容
   if (hasError) {
