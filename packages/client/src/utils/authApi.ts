@@ -1,7 +1,7 @@
 import type { User } from '@/stores/useAuthStore'
 
 // API基础URL，您可以根据实际情况修改
-const API_BASE_URL = 'http://localhost:8080/api/v1' // 假设后端服务运行在3001端口
+const API_BASE_URL = 'http://81.68.224.194:8080/api/v1' // 假设后端服务运行在3001端口
 
 export interface ApiResponse<T = any> {
   success: boolean
