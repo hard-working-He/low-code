@@ -1,0 +1,69 @@
+.login-container {
+  padding: 24px;
+  width: 100%;
+  max-width: 400px;
+  
+  .login-header {
+    text-align: center;
+    margin-bottom: 24px;
+    
+    .ant-typography {
+      margin-bottom: 8px;
+    }
+  }
+  
+  .ant-form {
+    .ant-form-item {
+      margin-bottom: 16px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    
+    .ant-input-affix-wrapper,
+    .ant-input {
+      border-radius: 6px;
+      
+      .ant-input {
+        font-size: 14px;
+      }
+    }
+    
+    .ant-btn {
+      height: 44px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 500;
+    }
+  }
+  
+  .login-footer {
+    text-align: center;
+    margin-top: 24px;
+    
+    .ant-btn-link {
+      color: #1890ff;
+      font-weight: 500;
+      
+      &:hover {
+        color: #40a9ff;
+      }
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 576px) {
+  .login-container {
+    padding: 16px;
+    
+    .login-header {
+      margin-bottom: 20px;
+    }
+    
+    .login-footer {
+      margin-top: 20px;
+    }
+  }
+} 

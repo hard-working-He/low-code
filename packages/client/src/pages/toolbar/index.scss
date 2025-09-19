@@ -112,3 +112,45 @@
         background-color: var(--actived-text-color);
     }
 }
+
+/* 用户认证区域样式 */
+.auth-section {
+    margin-left: 16px;
+    display: flex;
+    align-items: center;
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+        }
+        
+        .username {
+            font-size: 14px;
+            color: var(--text-color);
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+}
+
+/* 暗黑主题下的用户认证区域 */
+.dark .auth-section {
+    .user-info {
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+        
+        .username {
+            color: var(--text-color-dark);
+        }
+    }
+}

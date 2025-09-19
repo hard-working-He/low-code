@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Switch, Input, Modal, Upload } from 'antd';
-import { UndoOutlined, RedoOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
+import { Button, Switch, Input, Modal, Upload, Dropdown, Avatar } from 'antd';
+import { UndoOutlined, RedoOutlined, LockOutlined, UnlockOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import './index.scss';
-import { useEditorStore, useSnapShotStore, useLayerStore, useComposeStore, useAppStore } from '@/stores';
+import { useEditorStore, useSnapShotStore, useLayerStore, useComposeStore, useAppStore, useAuthStore } from '@/stores';
 import type { Component } from '@/stores/useEditorStore';
 import toast from '@/utils/toast'
 import { exportJsonFile } from '@/utils/fileUtils';
@@ -11,6 +11,8 @@ import { exportJsonFile } from '@/utils/fileUtils';
 import PSD from 'psd.js';
 // Import the actual Preview component
 import Preview from '@/pages/Preview';
+import { AuthModal } from '@/components/AuthModal';
+import { logoutUser } from '@/utils/authApi';
 //const AceEditor = () => <div>Ace Editor Component</div>;
 
 const Toolbar: React.FC = () => {
@@ -33,6 +35,9 @@ const Toolbar: React.FC = () => {
   const isDarkMode = useAppStore((state) => state.isDarkMode);
   const toggleDarkMode = useAppStore((state) => state.toggleDarkMode);
   
+  // 认证相关状态
+  const { user, isAuthenticated, logout: authLogout } = useAuthStore();
+  
   // 输出快照状态信息，用于调试
   useEffect(() => {
     console.log('快照状态:', {
@@ -48,6 +53,7 @@ const Toolbar: React.FC = () => {
   //const [isShowAceEditor, setIsShowAceEditor] = useState(false);
   const [isShowDialog, setIsShowDialog] = useState(false);
   const [isExport, setIsExport] = useState(false);
+  const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
   const [isPsdImport, setIsPsdImport] = useState(false);
   const [jsonData, setJsonData] = useState('');
   const curComponent = useLayerStore((state) => state.curComponent);
@@ -482,6 +488,30 @@ const Toolbar: React.FC = () => {
   // 计算撤销和重做按钮是否应该禁用
   const canUndo = snapshotIndex >= 0;
   const canRedo = snapshotIndex < snapshots.length - 1;
+
+  // 处理用户登出
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      authLogout();
+      toast('已成功退出登录');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // 即使API调用失败，也要清除本地状态
+      authLogout();
+      toast('已退出登录');
+    }
+  };
+
+  // 用户菜单项
+  const userMenuItems = [
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: '退出登录',
+      onClick: handleLogout,
+    },
+  ];
   
   return (
     <div className={`toolbar-container ${isDarkMode ? 'dark' : ''}`}>
@@ -560,11 +590,46 @@ const Toolbar: React.FC = () => {
           onChange={handleToggleDarkMode}
         />
         <span className="mode-toggle-text">切换{isDarkMode ? '亮' : '暗'}模式</span>
+        
+        {/* 用户认证区域 */}
+        <div className="auth-section">
+          {isAuthenticated && user ? (
+            <Dropdown
+              menu={{ items: userMenuItems }}
+              placement="bottomRight"
+              trigger={['click']}
+            >
+              <div className="user-info">
+                <Avatar 
+                  size="small" 
+                  icon={<UserOutlined />} 
+                  style={{ marginRight: 8 }}
+                />
+                <span className="username">{user.username}</span>
+              </div>
+            </Dropdown>
+          ) : (
+            <Button 
+              type="primary"
+              icon={<UserOutlined />}
+              onClick={() => setIsAuthModalVisible(true)}
+            >
+              登录
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Preview component */}
       {isShowPreview && <Preview isScreenshot={isScreenshot} onClose={handlePreviewChange} />}
       {/* {isShowAceEditor && <AceEditor />} */}
+
+      {/* 认证模态框 */}
+      <AuthModal 
+        visible={isAuthModalVisible}
+        onClose={() => setIsAuthModalVisible(false)}
+        defaultMode="login"
+      />
 
       <Modal
         title={isExport ? '导出数据' : isPsdImport ? '导入PSD' : '导入数据'}
