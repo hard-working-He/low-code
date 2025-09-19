@@ -12,6 +12,7 @@
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
     "antd": "^5.26.5",
+    "dayjs": "^1.11.18",
     "html-to-image": "^1.11.13",
     "loadsh": "^0.0.4",
     "psd.js": "^3.9.1",

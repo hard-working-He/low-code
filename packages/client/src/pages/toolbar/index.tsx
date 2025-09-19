@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Switch, Input, Modal, Upload, Dropdown, Avatar } from 'antd';
-import { UndoOutlined, RedoOutlined, LockOutlined, UnlockOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { UndoOutlined, RedoOutlined, LockOutlined, UnlockOutlined, UserOutlined, LogoutOutlined, HistoryOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import './index.scss';
-import { useEditorStore, useSnapShotStore, useLayerStore, useComposeStore, useAppStore, useAuthStore } from '@/stores';
+import { useEditorStore, useSnapShotStore, useLayerStore, useComposeStore, useAppStore, useAuthStore, useHistoryStore } from '@/stores';
 import type { Component } from '@/stores/useEditorStore';
 import toast from '@/utils/toast'
 import { exportJsonFile } from '@/utils/fileUtils';
+import { createHistory } from '@/utils/historyApi';
 // 正确导入PSD.js库
 import PSD from 'psd.js';
 // Import the actual Preview component
 import Preview from '@/pages/Preview';
 import { AuthModal } from '@/components/AuthModal';
 import { logoutUser } from '@/utils/authApi';
+import HistoryModal from '@/components/HistoryModal';
 //const AceEditor = () => <div>Ace Editor Component</div>;
 
 const Toolbar: React.FC = () => {
@@ -38,6 +40,9 @@ const Toolbar: React.FC = () => {
   // 认证相关状态
   const { user, isAuthenticated, logout: authLogout } = useAuthStore();
   
+  // 历史记录相关状态
+  const { addHistory, clearHistories } = useHistoryStore();
+  
   // 输出快照状态信息，用于调试
   useEffect(() => {
     console.log('快照状态:', {
@@ -56,6 +61,11 @@ const Toolbar: React.FC = () => {
   const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
   const [isPsdImport, setIsPsdImport] = useState(false);
   const [jsonData, setJsonData] = useState('');
+  const [isSaveModalVisible, setIsSaveModalVisible] = useState(false);
+  const [saveTitle, setSaveTitle] = useState('');
+  const [saveDescription, setSaveDescription] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
   const curComponent = useLayerStore((state) => state.curComponent);
   const [psdLoading, setPsdLoading] = useState(false);
   // 获取选区数据
@@ -329,9 +339,61 @@ const Toolbar: React.FC = () => {
   };
 
   const handleSave = () => {
-    /* console.log('历史记录', componentData);*/
-    localStorage.setItem('历史记录', JSON.stringify(componentData)); 
-    toast('保存成功');
+    // 检查用户是否已登录
+    if (!isAuthenticated) {
+      setIsAuthModalVisible(true);
+      toast('请先登录后再保存');
+      return;
+    }
+
+    // 检查是否有组件数据
+    if (!componentData || componentData.length === 0) {
+      toast('暂无内容可保存');
+      return;
+    }
+
+    // 打开保存对话框
+    setIsSaveModalVisible(true);
+    setSaveTitle('');
+    setSaveDescription('');
+  };
+
+  const handleSaveConfirm = async () => {
+    if (!saveTitle.trim()) {
+      toast('请输入项目标题');
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      const historyData = {
+        title: saveTitle.trim(),
+        description: saveDescription.trim(),
+        json_data: JSON.stringify(componentData)
+      };
+
+      const response = await createHistory(historyData);
+      
+      if (response.success) {
+        toast('保存成功');
+        setIsSaveModalVisible(false);
+        // 将新保存的历史记录添加到store中
+        if (response.data) {
+          addHistory(response.data);
+        }
+        // 清空输入框
+        setSaveTitle('');
+        setSaveDescription('');
+      } else {
+        toast(response.message || '保存失败');
+      }
+    } catch (error) {
+      console.error('保存失败:', error);
+      toast('保存失败，请稍后重试');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const clearCanvas = () => {
@@ -494,12 +556,44 @@ const Toolbar: React.FC = () => {
     try {
       await logoutUser();
       authLogout();
+      // 清除历史记录数据
+      clearHistories();
       toast('已成功退出登录');
     } catch (error) {
       console.error('Logout error:', error);
       // 即使API调用失败，也要清除本地状态
       authLogout();
+      clearHistories();
       toast('已退出登录');
+    }
+  };
+
+  // 打开历史记录模态框
+  const handleOpenHistoryModal = () => {
+    if (!isAuthenticated) {
+      toast('请先登录');
+      setIsAuthModalVisible(true);
+      return;
+    }
+    setIsHistoryModalVisible(true);
+  };
+
+  // 加载历史记录
+  const handleLoadHistory = (record: any) => {
+    try {
+      const parsedData = JSON.parse(record.json_data);
+      // 清空当前数据
+      clearComponentData();
+      // 加载历史数据
+      if (parsedData && Array.isArray(parsedData)) {
+        parsedData.forEach((component: Component) => {
+          useEditorStore.getState().addComponent(component);
+        });
+      }
+      toast(`已加载项目：${record.title}`);
+    } catch (error) {
+      console.error('加载历史记录失败:', error);
+      toast('加载历史记录失败');
     }
   };
 
@@ -554,6 +648,7 @@ const Toolbar: React.FC = () => {
 
         <Button style={{ marginLeft: '10px' }} onClick={() => preview(false)}>预览</Button>
         <Button onClick={handleSave}>保存</Button>
+        <Button onClick={handleOpenHistoryModal} icon={<HistoryOutlined />}>历史记录</Button>
         <Button onClick={clearCanvas}>清空画布</Button>
         <Button disabled={!areaData.components.length} onClick={compose}>组合</Button>
         <Button
@@ -681,6 +776,58 @@ const Toolbar: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      {/* 保存对话框 */}
+      <Modal
+        title="保存项目"
+        open={isSaveModalVisible}
+        onCancel={() => setIsSaveModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setIsSaveModalVisible(false)}>取消</Button>,
+          <Button 
+            key="ok" 
+            type="primary" 
+            onClick={handleSaveConfirm}
+            loading={isSaving}
+            disabled={!saveTitle.trim()}
+          >
+            保存
+          </Button>
+        ]}
+        width={500}
+        maskClosable={false}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>
+            项目标题 <span style={{ color: 'red' }}>*</span>
+          </label>
+          <Input
+            placeholder="请输入项目标题"
+            value={saveTitle}
+            onChange={(e) => setSaveTitle(e.target.value)}
+            maxLength={100}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>
+            项目描述
+          </label>
+          <Input.TextArea
+            placeholder="请输入项目描述（可选）"
+            value={saveDescription}
+            onChange={(e) => setSaveDescription(e.target.value)}
+            rows={4}
+            maxLength={500}
+          />
+        </div>
+      </Modal>
+
+      {/* 历史记录模态框 */}
+      <HistoryModal
+        visible={isHistoryModalVisible}
+        onClose={() => setIsHistoryModalVisible(false)}
+        onLoadHistory={handleLoadHistory}
+      />
     </div>
   );
 };

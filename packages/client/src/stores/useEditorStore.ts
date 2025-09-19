@@ -112,9 +112,8 @@ export const useEditorStore = create<EditorStore>((set) => ({
     // 添加拖拽状态控制函数到store
     startDrag,
     endDrag,
-    // 从localStorage中获取历史记录，如果localStorage中没有历史记录，则初始化一个默认值
-    componentData: localStorage.getItem('历史记录') ? JSON.parse(localStorage.getItem('历史记录') || '[]') : 
-    [],
+    // 初始化空的组件数据，不再从localStorage加载
+    componentData: [],
     addComponent: (component: Component) => set((state: EditorStore) => {
       const result = { componentData: [...state.componentData, component] };
       recordSnapshotAfterUpdate();
