@@ -61,16 +61,18 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
       const response = await getHistories()
       console.log('History API response:', response) // 添加调试日志
       
-      // API 响应格式: { data: HistoryRecord[], total: number, message: string, success: boolean }
+      // API 响应格式: { data: HistoryRecord[], success: boolean, message: string }
       if (response.success && response.data) {
         console.log('Setting histories:', response.data) // 添加调试日志
         setHistories(response.data)
       } else {
         console.log('API response failed:', response) // 添加调试日志
+        setHistories([]) // 确保设置为空数组而不是undefined
         message.error(response.message || '获取历史记录失败')
       }
     } catch (error) {
       console.error('获取历史记录失败:', error)
+      setHistories([]) // 确保在错误情况下也设置为空数组
       message.error('获取历史记录失败')
     } finally {
       setLoading(false)
@@ -211,14 +213,14 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
     >
       <div className="history-stats">
         <Space>
-          <Tag color="cyan">共 {histories.length} 条记录</Tag>
+          <Tag color="cyan">共 {histories?.length || 0} 条记录</Tag>
           {loading && <LoadingOutlined spin />}
         </Space>
       </div>
       
       <Table
         columns={columns}
-        dataSource={histories}
+        dataSource={histories || []}
         rowKey="id"
         loading={loading}
         pagination={{

@@ -1,4 +1,9 @@
-import type { ApiResponse } from './authApi'
+// 通用 API 响应接口
+export interface ApiResponse<T = any> {
+  success: boolean
+  message: string
+  data?: T
+}
 import { getStoredToken } from './authApi'
 
 // API基础URL
@@ -29,13 +34,7 @@ export interface UpdateHistoryRequest {
   json_data?: string
 }
 
-// 获取历史记录响应接口
-export interface HistoryListResponse {
-  data: HistoryRecord[]
-  total: number
-  message: string
-  success: boolean
-}
+
 
 // 通用的带认证的API请求函数
 async function authenticatedApiRequest<T>(
@@ -75,34 +74,34 @@ async function authenticatedApiRequest<T>(
 }
 
 // 创建历史记录
-export async function createHistory(historyData: CreateHistoryRequest): Promise<HistoryRecord> {
-  return authenticatedApiRequest<HistoryRecord>('/lowcode/histories', {
+export async function createHistory(historyData: CreateHistoryRequest): Promise<ApiResponse<HistoryRecord>> {
+  return authenticatedApiRequest<ApiResponse<HistoryRecord>>('/lowcode/histories', {
     method: 'POST',
     body: JSON.stringify(historyData),
   })
 }
 
 // 获取所有历史记录
-export async function getHistories(): Promise<HistoryListResponse> {
-  return authenticatedApiRequest<HistoryListResponse>('/lowcode/histories')
+export async function getHistories(): Promise<ApiResponse<HistoryRecord[]>> {
+  return authenticatedApiRequest<ApiResponse<HistoryRecord[]>>('/lowcode/histories')
 }
 
 // 获取特定历史记录
-export async function getHistoryById(id: number): Promise<HistoryRecord> {
-  return authenticatedApiRequest<HistoryRecord>(`/lowcode/histories/${id}`)
+export async function getHistoryById(id: number): Promise<ApiResponse<HistoryRecord>> {
+  return authenticatedApiRequest<ApiResponse<HistoryRecord>>(`/lowcode/histories/${id}`)
 }
 
 // 更新历史记录
-export async function updateHistory(id: number, historyData: UpdateHistoryRequest): Promise<HistoryRecord> {
-  return authenticatedApiRequest<HistoryRecord>(`/lowcode/histories/${id}`, {
+export async function updateHistory(id: number, historyData: UpdateHistoryRequest): Promise<ApiResponse<HistoryRecord>> {
+  return authenticatedApiRequest<ApiResponse<HistoryRecord>>(`/lowcode/histories/${id}`, {
     method: 'PUT',
     body: JSON.stringify(historyData),
   })
 }
 
 // 删除历史记录
-export async function deleteHistory(id: number): Promise<{ success: boolean; message: string }> {
-  return authenticatedApiRequest<{ success: boolean; message: string }>(`/lowcode/histories/${id}`, {
+export async function deleteHistory(id: number): Promise<ApiResponse> {
+  return authenticatedApiRequest<ApiResponse>(`/lowcode/histories/${id}`, {
     method: 'DELETE',
   })
 } 
