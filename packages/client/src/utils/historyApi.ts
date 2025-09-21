@@ -7,7 +7,7 @@ export interface ApiResponse<T = any> {
 import { getStoredToken } from './authApi'
 
 // API基础URL
-const API_BASE_URL = 'http://81.68.224.194:8080/api/v1'
+const API_BASE_URL = 'https://81.68.224.194:8080/api/v1'
 
 // 历史记录数据接口
 export interface HistoryRecord {
