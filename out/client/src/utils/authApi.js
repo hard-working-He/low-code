@@ -5,7 +5,7 @@ exports.registerUser = registerUser;
 exports.loginUser = loginUser;
 exports.logoutUser = logoutUser;
 // API基础URL，您可以根据实际情况修改
-const API_BASE_URL = 'https://81.68.224.194:8080/api/v1'; // 假设后端服务运行在3001端口
+const API_BASE_URL = 'http://81.68.224.194:8080/api/v1'; // 假设后端服务运行在3001端口
 // 通用的API请求函数
 async function apiRequest(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;

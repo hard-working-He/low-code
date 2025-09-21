@@ -7,7 +7,7 @@ exports.updateHistory = updateHistory;
 exports.deleteHistory = deleteHistory;
 const authApi_1 = require("./authApi");
 // API基础URL
-const API_BASE_URL = 'https://81.68.224.194:8080/api/v1';
+const API_BASE_URL = 'http://81.68.224.194:8080/api/v1';
 // 通用的带认证的API请求函数
 async function authenticatedApiRequest(endpoint, options = {}) {
     const token = (0, authApi_1.getStoredToken)();
