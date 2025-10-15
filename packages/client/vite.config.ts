@@ -36,6 +36,15 @@ export default defineConfig({
       '@utils': resolve(__dirname, './src/utils'),
     }
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://81.68.224.194:8080',
+        changeOrigin: true,
+        // Keep '/api' prefix so backend receives '/api/v1/...'
+      },
+    },
+  },
   build: {
     minify: 'terser',
     terserOptions: {
@@ -45,6 +54,7 @@ export default defineConfig({
         drop_debugger: true,
       },
     },
+    
     rollupOptions: {
       output: {
         manualChunks(id) {

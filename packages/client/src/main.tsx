@@ -9,6 +9,7 @@ import '@styles/reset.css'
 import '@styles/global.scss'
 import '@styles/dark.scss'
 import '@styles/animate.scss'
+import Beiwanglu from './pages/beiwanglu.tsx'
 
 // Create router with routes for App and Preview
 const router = createBrowserRouter([
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
     // Separate route for screenshot mode
     path: '/preview/screenshot',
     element: <Preview isScreenshot={true} />
+  },
+  {
+    path: '/beiwanglu',
+    element: <Beiwanglu />
   }
 ]);
 
